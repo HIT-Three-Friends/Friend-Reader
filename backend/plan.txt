@@ -1,0 +1,7 @@
+三个数据表
+用户
+	id name password email friend_num
+Friends
+	id belongid friendid name sex pic
+Social 	
+	id belongid socialid socialname
