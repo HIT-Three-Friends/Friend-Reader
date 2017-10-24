@@ -15,7 +15,11 @@ Including another URLconf
 """
 from django.conf.urls import include, url
 from django.contrib import admin
+from backend import views as backend_views
 
 urlpatterns = [
+
+    url(r'^$',backend_views.testfuck),
+    url(r'^users/$',backend_views.user,name = 'register'),
     url(r'^admin/', include(admin.site.urls)),
 ]

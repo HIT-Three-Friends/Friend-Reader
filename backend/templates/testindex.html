@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<body>
+<p>做个测试</p>
+
+
+ <form  action="/users/" method="post">
+     {% csrf_token %}
+     username:<input type="text" id="username" name="username" value="super"/>
+     password:<input type="password"  id="password" name="password"/>
+     email:<input type="email"  id="email" name="email"/>
+
+     <input type="submit" value="login" />
+</form>
+</body>
+</html>

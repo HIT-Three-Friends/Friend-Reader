@@ -1,15 +1,31 @@
 from django.shortcuts import render
 from django.http import JsonResponse
+from backend.models import users
+from django.views.decorators.csrf import csrf_protect
 
 # Create your views here.
-def users(request):
+def testfuck(request):
+    return render(request, 'testindex.html')
+
+@csrf_protect
+def user(request):
+    result = {'verdict': 'success', 'message': 'Successful!'}
     username = request.POST['username']
     password = request.POST['password']
     email = request.POST['email']
     username = str(username)
     password = str(password)
     email = str(email)
-    result = {'verdict':'success','message':'Successful'}
+    result['email'] = email
+    result['password'] = password
+    result['username'] = username
+    #return JsonResponse(result)
+    userinfo = users.objects.filter(email = email)
+    if userinfo:
+        result['verdict'] = 'fail'
+        result['message'] = 'The email already exits!'
+    else:
+        users.objects.create(username = username , password = password ,email = email ,friendnum = 0)
     return JsonResponse(result)
 
 def login(request):
