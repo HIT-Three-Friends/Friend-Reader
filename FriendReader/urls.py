@@ -16,10 +16,16 @@ Including another URLconf
 from django.conf.urls import include, url
 from django.contrib import admin
 from backend import views as backend_views
+from django.conf.urls.static import static
+from django.conf import settings
 
 urlpatterns = [
 
     url(r'^$',backend_views.testfuck),
     url(r'^users/$',backend_views.user,name = 'register'),
+    url(r'^users/login/$',backend_views.login,name = 'login'),
+    url(r'^users/logout/$',backend_views.logout,name = 'logout'),
+    url(r'^friends/$',backend_views.myfriends,name = 'myfriends'),
+    url(r'^friend/(\d+)/$',backend_views.friend,name = 'friend'),
     url(r'^admin/', include(admin.site.urls)),
-]
+]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

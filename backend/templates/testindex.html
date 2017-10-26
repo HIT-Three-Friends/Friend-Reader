@@ -3,14 +3,47 @@
 <body>
 <p>做个测试</p>
 
-
+<hr />
  <form  action="/users/" method="post">
      {% csrf_token %}
      username:<input type="text" id="username" name="username" value="super"/>
      password:<input type="password"  id="password" name="password"/>
      email:<input type="email"  id="email" name="email"/>
-
+     <input type="submit" value="register" />
+</form>
+<hr />
+ <form  action="/users/login/" method="post">
+     {% csrf_token %}
+     username:<input type="text" id="username" name="username" value="super"/>
+     password:<input type="password"  id="password" name="password"/>
      <input type="submit" value="login" />
+</form>
+<hr />
+ <form  action="/users/logout/" method="GET">
+     <input type="submit" value="logout" />
+</form>
+<hr />
+ <form  action="/friends/" method="POST" enctype="multipart/form-data">
+     {% csrf_token %}
+    name:<input type="text" id="name" name="name" value="fuck"/>
+    sex:<input type="text" id="sex" name="sex" value="1"/>
+    <input type="file" id = "avatar" name="avatar">
+    <input type="submit" value="submit" />
+</form>
+<hr />
+ <form  action="/friends/" method="GET">
+     {% csrf_token %}
+    <input type="submit" value="show" />
+</form>
+<hr />
+ <form  action="/friend/2/" method="GET">
+     {% csrf_token %}
+    <input type="submit" value="show2" />
+</form>
+<hr />
+ <form  action="/friend/2/" method="delete">
+     {% csrf_token %}
+    <input type="submit" value="delete2" />
 </form>
 </body>
 </html>

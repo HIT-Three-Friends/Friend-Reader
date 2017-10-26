@@ -7,13 +7,15 @@ class users(models.Model):
     email = models.CharField(max_length=30)
     friendnum = models.IntegerField(default=0)
 
+    def __int__(self):
+        return self.friendnum
+
 class friends(models.Model):
-    id = models.IntegerField(primary_key=True)
     user = models.CharField(max_length=20)
     friendid = models.IntegerField(default=0)
     name = models.CharField(max_length=20)
     sex = models.IntegerField(default=0)
-    avatar = models.CharField(max_length=20)
+    avatar = models.ImageField(null=True,blank=True,upload_to="upload")
 
 class social(models.Model):
     id = models.IntegerField(primary_key=True)
