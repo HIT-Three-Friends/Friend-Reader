@@ -45,5 +45,20 @@
      {% csrf_token %}
     <input type="submit" value="delete2" />
 </form>
+ <form  action="/socials/2/" method="POST">
+      {% csrf_token %}
+    account:<input type="text" id="account" name="account" value="fuck"/>
+    platform:<input type="text" id="platform" name="platform" value="1"/>
+    <input type="submit" value="xinjian" />
+</form>
+ <form  action="/socials/2/" method="GET">
+     {% csrf_token %}
+    <input type="submit" value="show2all" />
+</form>
+
+ <form  action="/social/2/1/" method="GET">
+     {% csrf_token %}
+    <input type="submit" value="show21" />
+</form>
 </body>
 </html>

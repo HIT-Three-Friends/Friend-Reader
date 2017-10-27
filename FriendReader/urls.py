@@ -27,5 +27,7 @@ urlpatterns = [
     url(r'^users/logout/$',backend_views.logout,name = 'logout'),
     url(r'^friends/$',backend_views.myfriends,name = 'myfriends'),
     url(r'^friend/(\d+)/$',backend_views.friend,name = 'friend'),
+    url(r'^socials/(\d+)/$',backend_views.socials,name = 'socials'),
+    url(r'^social/(\d+)/(\d+)/$',backend_views.asocial,name = 'asocial'),
     url(r'^admin/', include(admin.site.urls)),
 ]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

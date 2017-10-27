@@ -18,7 +18,6 @@ class friends(models.Model):
     avatar = models.ImageField(null=True,blank=True,upload_to="upload")
 
 class social(models.Model):
-    id = models.IntegerField(primary_key=True)
     father = models.IntegerField(default=0)
     platform = models.IntegerField(default=0)
     account = models.CharField(max_length=20)
