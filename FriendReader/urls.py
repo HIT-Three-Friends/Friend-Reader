@@ -20,7 +20,6 @@ from django.conf.urls.static import static
 from django.conf import settings
 
 urlpatterns = [
-
     url(r'^$',backend_views.testfuck),
     url(r'^users/$',backend_views.user,name = 'register'),
     url(r'^users/login/$',backend_views.login,name = 'login'),

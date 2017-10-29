@@ -29,6 +29,7 @@ def user(request):
     else:
         users.objects.create(username = username , password = password ,email = email ,friendnum = 0)
     return JsonResponse(result)
+
 #登录
 def login(request):
     username = request.POST['username']
@@ -43,11 +44,13 @@ def login(request):
         result['verdict'] = 'fail'
         result['message'] = 'The Username or Password is not correct'
     return JsonResponse(result)
+
 #登出
 def logout(request):
     del request.session["username"]
     result = {'verdict':'success','message':'Successful'}
     return JsonResponse(result)
+
 #新建好友 好友列表
 def myfriends(request):
     result = {'verdict': 'success', 'message': 'Successful'}
@@ -76,6 +79,7 @@ def myfriends(request):
         result['verdict'] = 'fail'
         result['message'] = 'Please log in first!'
     return JsonResponse(result)
+
 #单个好友 查询 修改 删除
 def friend(request,id):
     result = {'verdict': 'success', 'message': 'Successful'}
@@ -101,6 +105,7 @@ def friend(request,id):
         result['verdict'] = 'fail'
         result['message'] = 'Please log in first!'
     return JsonResponse(result)
+
 #单个好友所有账号新建 + 列表
 def socials(request,friendid):
     result = {'verdict': 'success', 'message': 'Successful'}
@@ -124,6 +129,7 @@ def socials(request,friendid):
         result['verdict'] = 'fail'
         result['message'] = 'Please log in first!'
     return JsonResponse(result)
+
 #单个好友单个社交账号查询 修改 删除
 def asocial(request,friendid,socialid):
     result = {'verdict': 'success', 'message': 'Successful'}
@@ -148,3 +154,4 @@ def asocial(request,friendid,socialid):
         result['verdict'] = 'fail'
         result['message'] = 'Please log in first!'
     return JsonResponse(result)
+
