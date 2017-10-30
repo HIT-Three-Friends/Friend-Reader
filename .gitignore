@@ -102,3 +102,13 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+
+#setting
+.idea/
+
+#Akaisora's ignore
+AkaisoraTest*
+zhihuData/
+configspider.properties
+
+
