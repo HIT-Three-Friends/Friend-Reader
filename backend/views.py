@@ -2,6 +2,7 @@ from django.shortcuts import render
 from django.http import JsonResponse
 from backend.models import users,friends,social
 from django.views.decorators.csrf import csrf_protect
+from django.db.models import Q
 from PIL import Image
 
 # Create your views here.
@@ -22,10 +23,10 @@ def user(request):
     result['password'] = password
     result['username'] = username
     #return JsonResponse(result)
-    userinfo = users.objects.filter(email = email)
+    userinfo = users.objects.filter(Q(email = email)|Q(username = username))
     if userinfo:
         result['verdict'] = 'fail'
-        result['message'] = 'The email already exits!'
+        result['message'] = 'The email or username already exits!'
     else:
         users.objects.create(username = username , password = password ,email = email ,friendnum = 0)
     return JsonResponse(result)
