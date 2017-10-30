@@ -18,6 +18,7 @@ from django.contrib import admin
 from backend import views as backend_views
 from django.conf.urls.static import static
 from django.conf import settings
+import frontend.views
 
 urlpatterns = [
     url(r'^$',backend_views.testfuck),
@@ -28,5 +29,9 @@ urlpatterns = [
     url(r'^friend/(\d+)/$',backend_views.friend,name = 'friend'),
     url(r'^socials/(\d+)/$',backend_views.socials,name = 'socials'),
     url(r'^social/(\d+)/(\d+)/$',backend_views.asocial,name = 'asocial'),
-    url(r'^admin/', include(admin.site.urls)),
+
+    url(r'^login/', frontend.views.login),
+    url(r'^register/', frontend.views.register),
+
 ]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
++ static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
