@@ -9,9 +9,9 @@ import pickle,logging,re,configparser
 from zhihu_oauth import ZhihuClient,ActType
 from zhihu_oauth.helpers import act2str
 
-from .socialspider import socialspider
+from .sp_base import basespider
 
-class zhihuspider(socialspider):
+class zhihuspider(basespider):
 	def __init__(self):
 		super().loadConfig()
 		super().prepare()

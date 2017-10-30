@@ -3,7 +3,7 @@
 
 import configparser,logging
 
-class socialspider(object):
+class basespider(object):
 
 	def __init__(self):
 		self.loadConfig()
