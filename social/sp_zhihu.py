@@ -52,6 +52,14 @@ class zhihuspider(basespider):
 		with open(self.friends_file,"wb") as f: pickle.dump(self.name_map,f)
 
 	def getActivities(self,userid,count=20):
+		"""
+		关于actionType
+			CREATE_ANSWER
+			CREATE_ARTICLE
+			CREATE_QUESTION
+			FOLLOW_QUESTION
+			VOTEUP_ANSWER
+		"""
 		def getTargetText(target,actType):
 			ma={
 				ActType.CREATE_ANSWER:'content',
