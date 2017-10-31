@@ -6,6 +6,7 @@ __author__ = 'Han Yue (1224067801@qq.com)'
 
 import os,time
 import pickle,logging,re,configparser
+import zhihu_oauth
 from zhihu_oauth import ZhihuClient,ActType
 from zhihu_oauth.helpers import act2str
 
@@ -60,18 +61,15 @@ class zhihuspider(basespider):
 			FOLLOW_QUESTION
 			VOTEUP_ANSWER
 		"""
-		def getTargetText(target,actType):
-			ma={
-				ActType.CREATE_ANSWER:'content',
-				ActType.CREATE_ARTICLE:'title',
-				ActType.CREATE_QUESTION:'title',
-				ActType.FOLLOW_QUESTION:'title',
-				ActType.VOTEUP_ANSWER:'content'
-			}
-			if actType in ma:
-				return getattr(target,ma[actType])
+		def getTargetText_Topic(target,actType):
+			if isinstance(target,zhihu_oauth.Answer):
+				return (target.content,target.question.topics)
+			elif isinstance(target,zhihu_oauth.Question):
+				return (target.title,target.topics)
+			elif isinstance(target,zhihu_oauth.Article):
+				return (target.excerpt,[])
 			else:
-				return ""
+				return (None,[])
 		
 		pp=self.client.people(userid)
 		if pp.over:
@@ -94,9 +92,11 @@ class zhihuspider(basespider):
 				'time':time.localtime(act.created_time),
 				'actionType':act.type,
 				'summary':act2str(act),
-				'targetText':getTargetText(act.target,act.type)
+				'targetText':getTargetText_Topic(act.target,act.type)[0],
+				'topics':list(map(lambda topic:topic.name,getTargetText_Topic(act.target,act.type)[1])),
 			}
 			imglist=re.findall(r'(?<=<img src=")(.*?)(?=")',entry['targetText'])
+			if isinstance(act.target,zhihu_oauth.Article):imglist[0:0]=[act.target.image_url]
 			if imglist: entry['imgs']=imglist
 
 			activityList.append(entry)
