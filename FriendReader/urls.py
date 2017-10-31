@@ -30,8 +30,13 @@ urlpatterns = [
     url(r'^socials/(\d+)/$',backend_views.socials,name = 'socials'),
     url(r'^social/(\d+)/(\d+)/$',backend_views.asocial,name = 'asocial'),
 
-    url(r'^login/', frontend.views.login),
-    url(r'^register/', frontend.views.register),
+    url(r'^login/$', frontend.views.login),
+    url(r'^register/$', frontend.views.register),
+    url(r'^show/activities/$', frontend.views.show_activities),
+    url(r'^show/vitalities/$', frontend.views.show_vitalities),
+    url(r'^show/interests/$', frontend.views.show_interests),
+    url(r'^config/user/', frontend.views.config_user),
+    url(r'^config/friends/$', frontend.views.config_friends),
 
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)\
               + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
