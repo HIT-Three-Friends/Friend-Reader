@@ -1,16 +1,22 @@
 $(function(){
-    var json = getFormJson($("form"));
-    $.ajax({
-        url: "/users",
-        type: "POST",
-        success: function(data) {
-            if (data["verdict"] == "success") {
-                alert("注册成功");
-                window.location.href = "/login";
-            } else {
-                alert(data["message"]);
+    $("#button-register").click(function() {
+        var json = getFormJson($("form"));
+        $.ajax({
+            url: "/users/",
+            type: "POST",
+            data: json,
+            success: function (data) {
+                if (data["verdict"] == "success") {
+                    alert("注册成功");
+                    window.location.href = "/login/";
+                } else {
+                    alert(data["message"]);
+                }
+            },
+            error: function() {
+               alert("注册失败，请联系管理员");
             }
-        }
+        });
     });
 });
 function getFormJson(node) {

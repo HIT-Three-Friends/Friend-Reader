@@ -144,6 +144,12 @@
     <script src="https://npmcdn.com/tether@1.2.4/dist/js/tether.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/1000hz-bootstrap-validator/0.11.9/validator.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/js/bootstrap.min.js" integrity="sha384-vBWWzlZJ8ea9aCX4pEW3rVHjgjt7zpkNpZk+02D9phzyeVkE+jo0ieGizqPLForn" crossorigin="anonymous"></script>
+    <script>
+         $.ajaxSetup({
+             data: {csrfmiddlewaretoken: '{{ csrf_token }}' }
+         });
+    </script>
+    <script src="/static/js/login/login.js"></script>
 
 </head>
 <body>
@@ -158,12 +164,12 @@
 		                    <form class="form-horizontal" data-toggle="validator" role="form">
 		                        <span class="heading" style="color:#1d7db1">用户登录</span>
 		                        <div class="form-group">
-                                    <input type="text" class="form-control" id="username" placeholder="用户名" required>
+                                    <input type="text" class="form-control" id="username" name="username" placeholder="用户名" required>
 		                            <i class="fa fa-user"></i>
                                     <div class="help-block with-errors"></div>
 		                        </div>
 		                        <div class="form-group help">
-		                            <input type="password" class="form-control" id="password" placeholder="密　码" required>
+		                            <input type="password" class="form-control" id="password" name="password" placeholder="密　码" required>
 		                            <i class="fa fa-lock"></i>
                                     <div class="help-block with-errors"></div>
 		                        </div>

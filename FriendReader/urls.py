@@ -33,5 +33,5 @@ urlpatterns = [
     url(r'^login/', frontend.views.login),
     url(r'^register/', frontend.views.register),
 
-]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-+ static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)\
+              + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
