@@ -2,6 +2,7 @@ from django.shortcuts import render
 from django.http import JsonResponse
 from backend.models import users,friends,social
 from django.views.decorators.csrf import csrf_protect
+from django.db.models import Q
 from PIL import Image
 
 # Create your views here.
@@ -9,26 +10,38 @@ def testfuck(request):
     return render(request, 'testindex.html')
 
 @csrf_protect
-#新建用户
+#新建用户 get用户信息
 def user(request):
     result = {'verdict': 'success', 'message': 'Successful!'}
-    username = request.POST['username']
-    password = request.POST['password']
-    email = request.POST['email']
-    username = str(username)
-    password = str(password)
-    email = str(email)
-    result['email'] = email
-    result['password'] = password
-    result['username'] = username
-    #return JsonResponse(result)
-    userinfo = users.objects.filter(email = email)
-    if userinfo:
-        result['verdict'] = 'fail'
-        result['message'] = 'The email already exits!'
-    else:
-        users.objects.create(username = username , password = password ,email = email ,friendnum = 0)
-    return JsonResponse(result)
+    if request.method == 'POST':
+        username = request.POST['username']
+        password = request.POST['password']
+        email = request.POST['email']
+        username = str(username)
+        password = str(password)
+        email = str(email)
+        result['email'] = email
+        result['password'] = password
+        result['username'] = username
+        #return JsonResponse(result)
+        userinfo = users.objects.filter(Q(email = email)|Q(username = username))
+        if userinfo:
+            result['verdict'] = 'fail'
+            result['message'] = 'The email or username already exits!'
+        else:
+            users.objects.create(username = username , password = password ,email = email ,friendnum = 0)
+        return JsonResponse(result)
+    else :
+        username = request.session['username']
+        userinfo = users.objects.filter(username=username)
+        if userinfo:
+            result['username'] = username
+            result['email'] = str(list(userinfo.values('email'))[0])
+            result['avatar'] = 'upload/233.png'
+        else:
+            result['verdict'] = 'fail'
+            result['message'] = 'Please log in first!'
+        return JsonResponse(result)
 
 #登录
 def login(request):
@@ -154,4 +167,34 @@ def asocial(request,friendid,socialid):
         result['verdict'] = 'fail'
         result['message'] = 'Please log in first!'
     return JsonResponse(result)
+
+def activity(request):
+    result = {'verdict': 'success', 'message': 'Successful'}
+    plat = ['zhihu','weibo','tieba']
+    username = request.session['username']
+    userinfo = users.objects.filter(username=username)
+    acts = []
+    if userinfo:
+        id = friends.objects.filter(user = username).values('id','name','sex','avatar')
+        id = list(id)
+        for afriend in id:
+            account = social.objects.filter(father = afriend['id']).values('platform', 'account')
+            account = list(account)
+            ans = []
+            for ac in account:
+                #ans = ans + client.fun(plat[int(ac['platform'])],ac['account'],10)
+                ans = ans
+            for act in ans:
+                temp = {}
+                temp['name'] = account['name'] + '('+act['username']+')'
+                temp['sex'] = account['sex']
+                temp['avatar'] = act['avatar_url']
+                temp['time'] = act['time']
+                temp['Title'] = act['summary']
+                temp['Word'] = act['targetText']
+                if act.has_key('imgs'):
+                    temp['Pic'] = act['imags']
+                else:
+                    temp['Pic'] = []
+                temp['Video'] = ''
 
