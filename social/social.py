@@ -30,6 +30,7 @@ class social(object):
 			'summary'		动态概要
 			'targetText'	目标文本
 			'imgs'			图片url列表
+			'topics'		话题列表
 			=============	===============
 			建议使用前检查一下key是否存在
 		"""
