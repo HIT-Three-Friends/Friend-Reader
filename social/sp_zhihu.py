@@ -67,15 +67,6 @@ class zhihuspider(basespider):
 		"""
 		def getTargetText_Topic(target,actType):
 			if isinstance(target,zhihu_oauth.Answer):
-<<<<<<< HEAD
-				return (target.content,target.question.topics)
-			elif isinstance(target,zhihu_oauth.Question):
-				return (target.title,target.topics)
-			elif isinstance(target,zhihu_oauth.Article):
-				return (target.excerpt,[])
-			else:
-				return (None,[])
-=======
 				return (target.content,target.question.topics,self.url_template_answer%(target.question.id,target.id))
 			elif isinstance(target,zhihu_oauth.Question):
 				return (target.title,target.topics,self.url_template_question%(target.id))
@@ -83,7 +74,6 @@ class zhihuspider(basespider):
 				return (target.excerpt,[],self.url_template_article%(target.id))
 			else:
 				return (None,[],"")
->>>>>>> social
 		
 		pp=self.client.people(userid)
 		if pp.over:
@@ -111,7 +101,7 @@ class zhihuspider(basespider):
 				'topics':list(map(lambda topic:topic.name,targetInfo[1])),
 				'source_url':targetInfo[2]
 			}
-			print(entry['source_url'])
+			#print(entry['source_url'])
 			imglist=re.findall(r'(?<=<img src=")(.*?)(?=")',entry['targetText'])
 			if isinstance(act.target,zhihu_oauth.Article):imglist[0:0]=[act.target.image_url]
 			if imglist: entry['imgs']=imglist
