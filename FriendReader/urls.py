@@ -29,7 +29,7 @@ urlpatterns = [
     url(r'^friend/(\d+)/$',backend_views.friend,name = 'friend'),
     url(r'^socials/(\d+)/$',backend_views.socials,name = 'socials'),
     url(r'^social/(\d+)/(\d+)/$',backend_views.asocial,name = 'asocial'),
-
+    url(r'^activities/$',backend_views.activity,name = 'act'),
     url(r'^login/', frontend.views.login),
     url(r'^register/', frontend.views.register),
 

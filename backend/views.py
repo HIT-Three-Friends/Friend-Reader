@@ -3,6 +3,8 @@ from django.http import JsonResponse
 from backend.models import users,friends,social
 from django.views.decorators.csrf import csrf_protect
 from django.db.models import Q
+from social import social as socialpc
+import  time
 from PIL import Image
 
 # Create your views here.
@@ -32,14 +34,14 @@ def user(request):
             users.objects.create(username = username , password = password ,email = email ,friendnum = 0)
         return JsonResponse(result)
     else :
-        username = request.session['username']
+        username = request.session.get('username','')
         userinfo = users.objects.filter(username=username)
         if userinfo:
             result['username'] = username
-            result['email'] = str(list(userinfo.values('email'))[0])
+            result['email'] = str(list(userinfo.values('email'))[0]['email'])
             result['avatar'] = 'upload/233.png'
         else:
-            result['verdict'] = 'fail'
+            result['verdict'] = 'error'
             result['message'] = 'Please log in first!'
         return JsonResponse(result)
 
@@ -67,7 +69,7 @@ def logout(request):
 #新建好友 好友列表
 def myfriends(request):
     result = {'verdict': 'success', 'message': 'Successful'}
-    username = request.session['username']
+    username = request.session.get('username', '')
     userinfo = users.objects.filter(username=username)
     #是否在线
     if userinfo:
@@ -96,7 +98,7 @@ def myfriends(request):
 #单个好友 查询 修改 删除
 def friend(request,id):
     result = {'verdict': 'success', 'message': 'Successful'}
-    username = request.session['username']
+    username = request.session.get('username', '')
     userinfo = users.objects.filter(username=username)
     # 是否在线
     if userinfo:
@@ -122,7 +124,7 @@ def friend(request,id):
 #单个好友所有账号新建 + 列表
 def socials(request,friendid):
     result = {'verdict': 'success', 'message': 'Successful'}
-    username = request.session['username']
+    username = request.session.get('username', '')
     userinfo = users.objects.filter(username=username)
     # 是否在线
     if userinfo:
@@ -146,7 +148,7 @@ def socials(request,friendid):
 #单个好友单个社交账号查询 修改 删除
 def asocial(request,friendid,socialid):
     result = {'verdict': 'success', 'message': 'Successful'}
-    username = request.session['username']
+    username = request.session.get('username', '')
     userinfo = users.objects.filter(username=username)
     # 是否在线
     if userinfo:
@@ -171,8 +173,9 @@ def asocial(request,friendid,socialid):
 def activity(request):
     result = {'verdict': 'success', 'message': 'Successful'}
     plat = ['zhihu','weibo','tieba']
-    username = request.session['username']
+    username = request.session.get('username', '')
     userinfo = users.objects.filter(username=username)
+    client = socialpc()
     acts = []
     if userinfo:
         id = friends.objects.filter(user = username).values('id','name','sex','avatar')
@@ -182,19 +185,28 @@ def activity(request):
             account = list(account)
             ans = []
             for ac in account:
-                #ans = ans + client.fun(plat[int(ac['platform'])],ac['account'],10)
-                ans = ans
-            for act in ans:
-                temp = {}
-                temp['name'] = account['name'] + '('+act['username']+')'
-                temp['sex'] = account['sex']
-                temp['avatar'] = act['avatar_url']
-                temp['time'] = act['time']
-                temp['Title'] = act['summary']
-                temp['Word'] = act['targetText']
-                if act.has_key('imgs'):
-                    temp['Pic'] = act['imags']
-                else:
-                    temp['Pic'] = []
-                temp['Video'] = ''
-
+                ans = client.getActivities(ac['account'],plat[int(ac['platform'])],10)
+                for act in ans:
+                    temp = {}
+                    temp['name'] = afriend['name']
+                    temp['sex'] = afriend['sex']
+                    temp['avatar'] = act['avatar_url']
+                    temp['t'] = time.mktime(act['time'])
+                    temp['date'] = str(act['time'][0])+'-'+str(act['time'][1]) +'-'+str(act['time'][2])
+                    temp['time'] = str(act['time'][3])+':'+str(act['time'][4]) +':'+str(act['time'][5])
+                    temp['title'] = act['summary']+'<i>'+plat[int(ac['platform'])]+'.com</i>'
+                    temp['word'] = act['targetText']
+                    if act.__contains__('imgs'):
+                        temp['pic'] = act['imgs']
+                    else:
+                        temp['pic'] = []
+                    temp['Video'] = []
+                    acts.append(temp)
+        acts.sort(key=lambda x:x['t'])
+        acts.reverse()
+        result['activitynum'] = len(acts)
+        result['activity'] = acts
+    else:
+        result['verdict'] = 'fail'
+        result['message'] = 'Please log in first!'
+    return JsonResponse(result)
