@@ -78,20 +78,25 @@ def myfriends(request):
             result['friends'] = list(ans)
         else :
             name = request.POST['name']
-            sex = request.POST['sex']
             name = str(name)
-            sex = int(sex)
             userof = str(username)
-            avatar = request.FILES.get('avatar')
-            #新增计数
-            friendid = int(userinfo[0]) + 1
-            users.objects.filter(username = username).update(friendnum = int(friendid))
-            #返回id
-            result['id'] = friendid
-            #新建好友
-            friends.objects.create(user = userof,friendid = friendid,name = name, sex = sex,avatar = avatar)
+            friendinfo = friends.objects.filter(user = username,name = name)
+            if friendinfo:
+                result['verdict'] = 'fail'
+                result['message'] = '好友已存在'
+            else:
+                sex = request.POST['sex']
+                sex = int(sex)
+                avatar = request.FILES.get('avatar')
+                #新增计数
+                friendid = int(userinfo[0]) + 1
+                users.objects.filter(username = username).update(friendnum = int(friendid))
+                #返回id
+                result['id'] = friendid
+                #新建好友
+                friends.objects.create(user = userof,friendid = friendid,name = name, sex = sex,avatar = avatar)
     else:
-        result['verdict'] = 'fail'
+        result['verdict'] = 'error'
         result['message'] = 'Please log in first!'
     return JsonResponse(result)
 
@@ -114,10 +119,15 @@ def friend(request,id):
             name = str(name)
             sex = int(sex)
             userof = str(username)
+            friendinfo = friends.objects.filter(user=username, name=name)
+            if friendinfo:
+                if list(friendinfo.values('friendid'))[0]!=id:
+                    result['verdict'] = 'fail'
+                    result['message'] = '好友重名'
             avatar = request.FILES.get('avatar')
             friends.objects.filter(user = userof,friendid=id).update(name=name, sex=sex, avatar=avatar)
     else:
-        result['verdict'] = 'fail'
+        result['verdict'] = 'error'
         result['message'] = 'Please log in first!'
     return JsonResponse(result)
 
@@ -141,7 +151,7 @@ def socials(request,friendid):
             social.objects.create(father=id, platform = platform,account = account)
             return JsonResponse(result)
     else:
-        result['verdict'] = 'fail'
+        result['verdict'] = 'error'
         result['message'] = 'Please log in first!'
     return JsonResponse(result)
 
@@ -166,10 +176,10 @@ def asocial(request,friendid,socialid):
             social.objects.filter(father=id, platform=socialid).update(account=account)
             return JsonResponse(result)
     else:
-        result['verdict'] = 'fail'
+        result['verdict'] = 'error'
         result['message'] = 'Please log in first!'
     return JsonResponse(result)
-
+#获取好友动态 全部
 def activity(request):
     result = {'verdict': 'success', 'message': 'Successful'}
     plat = ['zhihu','weibo','tieba']
@@ -207,6 +217,33 @@ def activity(request):
         result['activitynum'] = len(acts)
         result['activity'] = acts
     else:
-        result['verdict'] = 'fail'
+        result['verdict'] = 'error'
         result['message'] = 'Please log in first!'
     return JsonResponse(result)
+
+def askactivity(username,id):
+    afriend = friends.objects.filter(user = username,friendid=id).values('id','name','sex','avatar')
+    account = social.objects.filter(father=afriend['id']).values('platform', 'account')
+    account = list(account)
+    ans = []
+    acts = []
+    client = socialpc()
+    plat = ['zhihu', 'weibo', 'tieba']
+    for ac in account:
+        ans = client.getActivities(ac['account'], plat[int(ac['platform'])], 10)
+        for act in ans:
+            temp = {}
+            temp['name'] = afriend['name']
+            temp['sex'] = afriend['sex']
+            temp['avatar'] = act['avatar_url']
+            temp['t'] = time.mktime(act['time'])
+            temp['date'] = str(act['time'][0]) + '-' + str(act['time'][1]) + '-' + str(act['time'][2])
+            temp['time'] = str(act['time'][3]) + ':' + str(act['time'][4]) + ':' + str(act['time'][5])
+            temp['title'] = act['summary'] + '<i>' + plat[int(ac['platform'])] + '.com</i>'
+            temp['word'] = act['targetText']
+            if act.__contains__('imgs'):
+                temp['pic'] = act['imgs']
+            else:
+                temp['pic'] = []
+            temp['Video'] = []
+            acts.append(temp)
