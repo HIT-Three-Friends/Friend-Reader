@@ -26,6 +26,10 @@ class zhihuspider(basespider):
 		self.data_path=self.socialRoot+self.config['data_path']
 		self.TOKEN_FILE=self.data_path+self.config['TOKEN_FILE']
 		self.friends_file=self.data_path+self.config['friends_file']
+		
+		self.url_template_question="https://www.zhihu.com/question/%s"
+		self.url_template_answer="https://www.zhihu.com/question/%s/answer/%s"
+		self.url_template_article="https://zhuanlan.zhihu.com/p/%s"
 
 	def prepare(self):
 		if not os.path.isdir(self.data_path): os.makedirs(self.data_path)
@@ -63,13 +67,13 @@ class zhihuspider(basespider):
 		"""
 		def getTargetText_Topic(target,actType):
 			if isinstance(target,zhihu_oauth.Answer):
-				return (target.content,target.question.topics)
+				return (target.content,target.question.topics,self.url_template_answer%(target.question.id,target.id))
 			elif isinstance(target,zhihu_oauth.Question):
-				return (target.title,target.topics)
+				return (target.title,target.topics,self.url_template_question%(target.id))
 			elif isinstance(target,zhihu_oauth.Article):
-				return (target.excerpt,[])
+				return (target.excerpt,[],self.url_template_article%(target.id))
 			else:
-				return (None,[])
+				return (None,[],"")
 		
 		pp=self.client.people(userid)
 		if pp.over:
@@ -85,6 +89,7 @@ class zhihuspider(basespider):
 		
 		cnt=0
 		for act in pp.activities:
+			targetInfo=getTargetText_Topic(act.target,act.type)
 			entry={
 				'username':pp.name,
 				'avatar_url':pp.avatar_url,
@@ -92,9 +97,11 @@ class zhihuspider(basespider):
 				'time':time.localtime(act.created_time),
 				'actionType':act.type,
 				'summary':act2str(act),
-				'targetText':getTargetText_Topic(act.target,act.type)[0],
-				'topics':list(map(lambda topic:topic.name,getTargetText_Topic(act.target,act.type)[1])),
+				'targetText':targetInfo[0],
+				'topics':list(map(lambda topic:topic.name,targetInfo[1])),
+				'source_url':targetInfo[2]
 			}
+			print(entry['source_url'])
 			imglist=re.findall(r'(?<=<img src=")(.*?)(?=")',entry['targetText'])
 			if isinstance(act.target,zhihu_oauth.Article):imglist[0:0]=[act.target.image_url]
 			if imglist: entry['imgs']=imglist
