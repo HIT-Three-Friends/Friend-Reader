@@ -9,7 +9,7 @@ $(function(){
            data : json,
            success : function(data){
                if(data["verdict"] == "success") {
-                   window.location.href = "/show";
+                   window.location.href = "/show/activities";
                } else {
                    alert(data["message"]);
                }
