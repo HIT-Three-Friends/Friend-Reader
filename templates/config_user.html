@@ -1,5 +1,205 @@
+{% extends "base.html" %}
+
 {% block head %}
+    <title>好友兴趣分析 - Friend Reader</title>
+    <style>
+    .navbar-login
+    {
+        width: 305px;
+        padding: 10px;
+        padding-bottom: 0px;
+    }
+
+    .navbar-login-session
+    {
+        padding: 10px;
+        padding-bottom: 0px;
+        padding-top: 0px;
+    }
+
+    .icon-size
+    {
+        font-size: 87px;
+    }
+    /* This parent can be any width and height */
+    .block {
+      text-align: center;
+    }
+
+    /* The ghost, nudged to maintain perfect centering */
+    .block:before {
+      content: '';
+      display: inline-block;
+      height: 100%;
+      vertical-align: middle;
+      margin-right: -0.25em; /* Adjusts for spacing */
+    }
+
+    /* The element to be centered, can
+       also be of any width and height */
+    .centered {
+      display: inline-block;
+      vertical-align: middle;
+      width: 50%;
+    }
+    </style>
+    <link rel="stylesheet" href="/static/css/AdminLTE.min.css"/>
+    <link rel="stylesheet" href="/static/css/_all-skins.min.css"/>
+    <script>
+
+        window.alert = function(){};
+        var defaultCSS = document.getElementById('bootstrap-css');
+        function changeCSS(css){
+            if(css) $('head > link').filter(':first').replaceWith('<link rel="stylesheet" href="'+ css +'" type="text/css" />');
+            else $('head > link').filter(':first').replaceWith(defaultCSS);
+        }
+        $( document ).ready(function() {
+        });
+    </script>
+    <script src="/static/js/adminlte.min.js"></script>
+    <script src="/static/js/current_user.js"></script>
 {% endblock %}
 
 {% block body %}
+<div class="navbar navbar-default navbar-fixed-top" role="navigation">
+    <div class="container">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a target="_blank" href="/show" class="navbar-brand">Friend Reader</a>
+        </div>
+        <div class="collapse navbar-collapse">
+            <ul class="nav navbar-nav">
+                <li><a href="/show/activities">好友动态</a></li>
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">动态分析
+                    <span class="caret"></span>
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a href="/show/vitalities">活跃度分析</a></li>
+                        <li><a href="/show/interests">兴趣分析</a></li>
+                    </ul>
+                </li>
+            </ul>
+            <ul class="nav navbar-nav navbar-right">
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                        <span class="glyphicon glyphicon-user"></span> 
+                        <strong id="username">Nombre</strong>
+                        <span class="glyphicon glyphicon-chevron-down"></span>
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li>
+                            <div class="navbar-login">
+                                <div class="row">
+                                    <div class="col-lg-4">
+                                        <p class="text-center">
+                                            <span class="glyphicon glyphicon-user icon-size"></span>
+                                        </p>
+                                    </div>
+                                    <div class="col-lg-8">
+                                        <p class="text-left"><strong id="name">Nombre Apellido</strong></p>
+                                        <p class="text-left small" id="email">correoElectronico@email.com</p>
+                                        <p class="text-left">
+                                            <a href="/config/user" class="btn btn-primary btn-block btn-sm">设置</a>
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </li>
+                        <li class="divider"></li>
+                        <li>
+                            <div class="navbar-login navbar-login-session">
+                                <div class="row">
+                                    <div class="col-lg-12">
+                                        <p>
+                                            <a href="javascript:void(0)" class="btn btn-danger btn-block" id="button-logout">注销</a>
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+    <div class="container" id="body" style="margin-top:100px" >
+
+
+    <div class="col-md-4" style="border:dashed #cccccc 1px;">
+          <!-- Widget: user widget style 1 -->
+          <div class="box box-widget widget-user-2" style="opacity:0">
+            <!-- Add the bg color to the header using any of the bg-* classes -->
+            <div class="widget-user-header bg-yellow">
+              <div class="widget-user-image">
+                <img class="img-circle" src="/media/upload/kugwzk.bmp" alt="User Avatar">
+              </div>
+              <!-- /.widget-user-image -->
+              <h3 class="widget-user-username">汪泽堃</h3>
+              <h5 class="widget-user-desc">好友</h5>
+            </div>
+            <div class="box-footer no-padding">
+              <ul class="nav nav-stacked">
+                <li><a href="#">知乎账号 <span class="pull-right badge bg-blue">kugwzk</span></a></li>
+                <li><a href="#">微博账号 <span class="pull-right badge bg-aqua">kugwzk</span></a></li>
+                <li><a href="#">GitHub账号 <span class="pull-right badge bg-green">kugwzk</span></a></li>
+                <li><a href="#">Followers <span class="pull-right badge bg-red">842</span></a></li>
+              </ul>
+            </div>
+          </div>
+          <!-- /.widget-user -->
+        </div>
+    <div class="col-md-4">
+          <!-- Widget: user widget style 1 -->
+          <div class="box box-widget widget-user-2">
+            <!-- Add the bg color to the header using any of the bg-* classes -->
+            <div class="widget-user-header bg-yellow">
+              <div class="widget-user-image">
+                <img class="img-circle" src="/media/upload/kugwzk.bmp" alt="User Avatar">
+              </div>
+              <!-- /.widget-user-image -->
+              <h3 class="widget-user-username">汪泽堃</h3>
+              <h5 class="widget-user-desc">好友</h5>
+            </div>
+            <div class="box-footer no-padding">
+              <ul class="nav nav-stacked">
+                <li><a href="#">知乎账号 <span class="pull-right badge bg-blue">kugwzk</span></a></li>
+                <li><a href="#">微博账号 <span class="pull-right badge bg-aqua">kugwzk</span></a></li>
+                <li><a href="#">GitHub账号 <span class="pull-right badge bg-green">kugwzk</span></a></li>
+                <li><a href="#">Followers <span class="pull-right badge bg-red">842</span></a></li>
+              </ul>
+            </div>
+          </div>
+          <!-- /.widget-user -->
+        </div>
+    <div class="col-md-4">
+          <!-- Widget: user widget style 1 -->
+          <div class="box box-widget widget-user-2">
+            <!-- Add the bg color to the header using any of the bg-* classes -->
+            <div class="widget-user-header bg-yellow">
+              <div class="widget-user-image">
+                <img class="img-circle" src="/media/upload/fake_fan.bmp" alt="User Avatar">
+              </div>
+              <!-- /.widget-user-image -->
+              <h3 class="widget-user-username">郑晨光</h3>
+              <h5 class="widget-user-desc">好友</h5>
+            </div>
+            <div class="box-footer no-padding">
+              <ul class="nav nav-stacked">
+                <li><a href="#">知乎账号<span class="pull-right badge bg-blue" id="zhihu">fake_fan</span></a></li>
+                <li><a href="#">微博账号<span class="pull-right badge bg-aqua" id="weibo">fake_fan</span></a></li>
+                <li><a href="#">GitHub账号<span class="pull-right badge bg-green" id="github">fake_fan</span></a></li>
+                <li><a href="#">Followers <span class="pull-right badge bg-red">84</span></a></li>
+              </ul>
+            </div>
+          </div>
+          <!-- /.widget-user -->
+        </div>
+    </div>
 {% endblock %}
