@@ -63,5 +63,21 @@
  <form  action="/activities/" method="GET">
     <input type="submit" value="showacti" />
 </form>
+</form>
+ <form  action="/activity/2/" method="GET">
+    <input type="submit" value="展示2的动态" />
+</form>
+
+</form>
+ <form  action="/vitality/2/months/" method="GET">
+     {% csrf_token %}
+    account:<input type="text" id="year" name="year" value="2017"/>
+    platform:<input type="text" id="month" name="month" value="11"/>
+    <input type="submit" value="展示2的动态2017 11 月" />
+</form>
+</form>
+ <form  action="/vitality/2/days/" method="GET">
+    <input type="submit" value="展示2的动态24小时" />
+</form>
 </body>
 </html>

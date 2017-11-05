@@ -39,8 +39,10 @@ urlpatterns = [
     url(r'^config/user/', frontend.views.config_user),
     url(r'^config/friends/$', frontend.views.config_friends),
 
-    url(r'^activities/$',backend_views.activity,name = 'act'),
-
+    url(r'^activities/$',backend_views.activities,name = 'act'),
+    url(r'^activity/(\d+)/$',backend_views.activity,name = 'act2'),
+    url(r'^vitality/(\d+)/months/$',backend_views.vitalitymon,name = 'act2'),
+    url(r'^vitality/(\d+)/days/$',backend_views.vitalityday,name = 'act2'),
 
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)\
               + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
