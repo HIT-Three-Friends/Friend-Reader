@@ -1,8 +1,10 @@
 $(function(){
    $("#button-login").click(function(){
+       console.log("test");
        var json = getFormJson($("form"));
+       console.log(json["username"]);
        $.ajax({
-           url: "/users/login",
+           url: "/users/login/",
            type: "post",
            data : json,
            success : function(data){
