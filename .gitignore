@@ -109,6 +109,6 @@ venv.bak/
 #Akaisora's ignore
 AkaisoraTest*
 zhihuData/
-configspider.properties
+spider.properties
 
 
