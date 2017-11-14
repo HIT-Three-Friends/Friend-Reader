@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import os
-import time,datetime
+import time,datetime,traceback
 import pickle,logging,re,configparser
 import requests
 from .sp_base import basespider
@@ -63,7 +63,7 @@ class weibospider(basespider):
 				timstr=timstr+time.strftime("+%Y",lct)
 				tim=time.strptime(timstr,"%m月%d日 %H:%M+%Y")
 				return tim
-			except Exception as e:pass
+			except Exception as e:traceback.print_exc()
 			try:
 				tim=time.strptime(timstr,"今天 %H:%M")
 				timstr=timstr+time.strftime("+%Y,%m,%d",lct)
@@ -120,10 +120,10 @@ class weibospider(basespider):
 					'username':pp.info['NickName'] if 'NickName' in pp.info else "",
 					'avatar_url':pp.info['Avatar_url'] if 'Avatar_url' in pp.info else "",
 					'headline':pp.info['BriefIntroduction'] if 'BriefIntroduction' in pp.info else "",
-					'time':transtime(act['PubTime'] if 'PubTime' in pp.info else ""),
-					'actionType':act['ActType'] if 'ActType' in pp.info else "",
+					'time':transtime(act['PubTime'] if 'PubTime' in act else ""),
+					'actionType':act['ActType'] if 'ActType' in act else "",
 					'summary':formsummary(pp,act),
-					'targetText':act['Content'] if 'Content' in pp.info else "",
+					'targetText':act['Content'] if 'Content' in act else "",
 					'topics':[],
 					'source_url':"https://weibo.com/"+("u/" if re.fullmatch(r'\d+',pp.id) else "")+pp.id+"?is_all=1"
 				}
