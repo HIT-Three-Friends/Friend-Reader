@@ -84,6 +84,7 @@
                         <li><a href="/show/interests">兴趣分析</a></li>
                     </ul>
                 </li>
+                <li><a href="#" data-toggle="modal" data-target="#friend-modal" data-name="" data-sex="" data-account0="" data-account1="" data-account2="" data-friendid="">添加朋友</a></li>
             </ul>
             <ul class="nav navbar-nav navbar-right">
                 <li class="dropdown">
@@ -132,8 +133,6 @@
 
     <div class="container" id="body" style="margin-top:100px" >
 
-
-    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#friend-modal" data-name="" data-sex="" data-account0="" data-account1="" data-account2="" data-friendid="">新建好友</button>
 
     <div class="modal fade" id="friend-modal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabe2">
       <div class="modal-dialog" role="document">
@@ -214,11 +213,11 @@
             <!-- Add the bg color to the header using any of the bg-* classes -->
             <div class="widget-user-header bg-yellow">
               <div class="widget-user-image">
-                <img class="img-circle" src="/media/upload/kugwzk.bmp" alt="User Avatar" id="avatar">
+                <a href="javascript:void(0);" style="padding:0;margin:0;"><img class="img-circle" src="/media/upload/kugwzk.bmp" id="avatar"></a>
               </div>
               <!-- /.widget-user-image -->
                 <h3 class="widget-user-username"><span id="name">汪泽堃</span></h3>
-              <h5 class="widget-user-desc"><img id="sex" style="height:18px;display:inline"></h5>
+                <h5 class="widget-user-desc"><img id="sex" style="height:18px;display:inline"></h5>
             </div>
             <div class="box-footer no-padding">
               <ul class="nav nav-stacked">

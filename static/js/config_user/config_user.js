@@ -45,6 +45,7 @@ function add_friend(new_friend, friend) {
                 success: function(data) {
                     if (data["verdict"] == "success") {
                         alert("删除成功");
+                        location.reload();
                     } else {
                         alert(data["message"]);
                     }
@@ -137,7 +138,7 @@ $(function() {
                     "sex" : parseInt(modal.find("#sex").val())
                 },
                 success: function(data) {
-                    var friendid = data["id"];
+                    var friendid = modal.find("#friendid").val();
                     var cnt = 0;
                     for (var i = 0; i < 3; i++) {
                         $.ajax({
