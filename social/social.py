@@ -2,11 +2,13 @@
 # -*- coding: utf-8 -*-
 
 from .sp_zhihu import zhihuspider
+from .sp_weibo import weibospider
 
 class social(object):
 	def __init__(self):
 		self.allSpider={
-			'zhihu':zhihuspider()
+			'zhihu':zhihuspider(),
+			'weibo':weibospider()
 		}
 	
 	def getActivities(self,userid,socialPlatform,count):
@@ -31,6 +33,7 @@ class social(object):
 			'targetText'	目标文本
 			'imgs'			图片url列表
 			'topics'		话题列表
+			'source_url'	原文链接
 			=============	===============
 			建议使用前检查一下key是否存在
 		"""
@@ -38,5 +41,5 @@ class social(object):
 		
 if __name__=="__main__":
 	testsocial=social()
-	acts=testsocial.getActivities('kugwzk','zhihu',4)
+	acts=testsocial.getActivities('fake_fan','weibo',4)
 	print("\n".join(map(str,acts)))

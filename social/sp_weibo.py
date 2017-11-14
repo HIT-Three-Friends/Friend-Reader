@@ -1,12 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import os,time
+import os
+import time,datetime
 import pickle,logging,re,configparser
 import requests
 from .sp_base import basespider
-from .items import TweetsItem, InformationItem, RelationshipsItem
-import .weibo_parser
+from .items import TweetsItem, InformationItem
+from .weibo_parser import *
 
 class weibospider(basespider):
 	def __init__(self):
@@ -19,7 +20,7 @@ class weibospider(basespider):
 	def loadConfig(self):
 		self.config=self.allConfig['weibo']
 		try: self.spConfig=self.spiderConfig['weibo']
-		except Exception as e: pass
+		except Exception as e: logging("load spConfig fail")
 		
 		self.data_path=self.socialRoot+self.config['data_path']
 		self.TOKEN_FILE=self.data_path+self.config['TOKEN_FILE']
@@ -32,80 +33,107 @@ class weibospider(basespider):
 	def prepare(self):
 		if not os.path.isdir(self.data_path): os.makedirs(self.data_path)
 		
-		if os.path.isfile(self.friends_file):
+		try:
 			with open(self.friends_file,"rb") as f: self.name_map=pickle.load(f)
-		else:
+		except Exception as e:
+			logging.warning("load friends failed")
 			self.name_map=dict()
 			
 	def login(self):
-		if os.path.isfile(self.TOKEN_FILE):
-			self.client.load_token(self.TOKEN_FILE)
-		else:
-			self.client.login_in_terminal()
-			self.client.save_token(self.TOKEN_FILE)
+		headers=eval(self.spConfig['headers'])
+		self.session=requests.session()
+		self.session.headers=headers
 		
-		self.me=self.client.me()
-		if self.me.over:
-			logging.error("you are baned! Reason is "+self.me.over_reason)
-		
+		self.me=People("2218968230",self.session)
+
 	def followings2name_map(self,me):
-		for peo in me.followings: self.name_map[peo.name]=peo.id
+		for peo in me.followings: 
+			self.name_map[peo[0]]=peo[1]
 		with open(self.friends_file,"wb") as f: pickle.dump(self.name_map,f)
 
 	def getActivities(self,userid,count=20):
-		"""
-		关于actionType
-			CREATE_ANSWER
-			CREATE_ARTICLE
-			CREATE_QUESTION
-			FOLLOW_QUESTION
-			VOTEUP_ANSWER
-		"""
-		def getTargetText_Topic(target,actType):
-			if isinstance(target,zhihu_oauth.Answer):
-				return (target.content,target.question.topics,self.url_template_answer%(target.question.id,target.id))
-			elif isinstance(target,zhihu_oauth.Question):
-				return (target.title,target.topics,self.url_template_question%(target.id))
-			elif isinstance(target,zhihu_oauth.Article):
-				return (target.excerpt,[],self.url_template_article%(target.id))
+		def transtime(timstr):
+			lct=time.localtime()
+			try:
+				tim=time.strptime(timstr,"%Y-%m-%d %H:%M:%S")
+				return tim
+			except Exception as e:pass
+			try:
+				tim=time.strptime(timstr,"%m月%d日 %H:%M")
+				timstr=timstr+time.strftime("+%Y",lct)
+				tim=time.strptime(timstr,"%m月%d日 %H:%M+%Y")
+				return tim
+			except Exception as e:pass
+			try:
+				tim=time.strptime(timstr,"今天 %H:%M")
+				timstr=timstr+time.strftime("+%Y,%m,%d",lct)
+				tim=time.strptime(timstr,"今天 %H:%M+%Y,%m,%d")
+				return tim
+			except Exception as e:pass
+			try:
+				deltamin=int(re.fullmatch("(\d{1,2})分钟前",timstr).group(1))
+				tim=datetime.datetime.now()+datetime.timedelta(minutes=-deltamin)
+				return time.localtime(time.mktime(tim.timetuple()))
+			except Exception as e:pass
+			try:
+				deltasec=int(re.fullmatch("(\d{1,2})秒钟前",timstr).group(1))
+				tim=datetime.datetime.now()+datetime.timedelta(seconds=-deltasec)
+				return time.localtime(time.mktime(tim.timetuple()))
+			except Exception as e:pass
+			return time.localtime()
+			
+		def formsummary(pp,act):
+			if 'Content' not in act:act['Content']=""
+			if 'OriginContent' not in act:act['OriginContent']=""
+			if 'TransFrom' not in act:act['TransFrom']=""
+			
+			if act['ActType']=="origin":
+				return "%s 发表了微博 %s"%(pp.info['NickName'],act['Content'] if len(act['Content'])<30 else act['Content'][:27]+"...")
+			elif act['ActType']=="trans":
+				return "%s 转发了 %s 的微博 %s"%(pp.info['NickName'],act['TransFrom'],act['OriginContent'] if len(act['OriginContent'])<30 else act['OriginContent'][:27]+"...")
 			else:
-				return (None,[],"")
+				return ""
 		
-		pp=self.client.people(userid)
-		if pp.over:
+		if isinstance(userid,int):userid=str(userid)
+		backuserid=userid
+		pp=People(userid,self.session)
+		if not pp.info:
 			if userid not in self.name_map:
-				try: self.followings2name_map(me)
-				except Exception as e: logging.error(str(e))
+				try: self.followings2name_map(self.me)
+				except Exception as e: logging.error("followings2name_map failed "+str(e))
 			if userid in self.name_map:
 				userid=self.name_map[userid]
-				pp=self.client.people(userid)
-			if pp.over:return []
+				pp=People(userid,self.session)
+			if not pp.info:
+				userid=self.screen_name2userid(userid)
+				pp=People(userid,self.session)
+				if not pp.info:
+					logging.error("Can't find user "+backuserid+" or login failed")
+					return []
 		
 		activityList=[]
 		
 		cnt=0
 		for act in pp.activities:
-			targetInfo=getTargetText_Topic(act.target,act.type)
-			entry={
-				'username':pp.name,
-				'avatar_url':pp.avatar_url,
-				'headline':pp.headline,
-				'time':time.localtime(act.created_time),
-				'actionType':act.type,
-				'summary':act2str(act),
-				'targetText':targetInfo[0],
-				'topics':list(map(lambda topic:topic.name,targetInfo[1])),
-				'source_url':targetInfo[2]
-			}
-			#print(entry['source_url'])
-			imglist=re.findall(r'(?<=<img src=")(.*?)(?=")',entry['targetText'])
-			if isinstance(act.target,zhihu_oauth.Article):imglist[0:0]=[act.target.image_url]
-			if imglist: entry['imgs']=imglist
+			try:
+				entry={
+					'username':pp.info['NickName'] if 'NickName' in pp.info else "",
+					'avatar_url':pp.info['Avatar_url'] if 'Avatar_url' in pp.info else "",
+					'headline':pp.info['BriefIntroduction'] if 'BriefIntroduction' in pp.info else "",
+					'time':transtime(act['PubTime'] if 'PubTime' in pp.info else ""),
+					'actionType':act['ActType'] if 'ActType' in pp.info else "",
+					'summary':formsummary(pp,act),
+					'targetText':act['Content'] if 'Content' in pp.info else "",
+					'topics':[],
+					'source_url':"https://weibo.com/"+("u/" if re.fullmatch(r'\d+',pp.id) else "")+pp.id+"?is_all=1"
+				}
+				if 'ImageUrls' in act: entry['imgs']=act['ImageUrls']
 
-			activityList.append(entry)
-			
-			cnt+=1
-			if cnt>=count:break
+				activityList.append(entry)
+				cnt+=1
+				if cnt>=count:break
+			except Exception as e:
+				logging.error("getActivities of "+backuserid+" failed")
 			
 		return activityList
 	
@@ -116,20 +144,33 @@ class weibospider(basespider):
 		if r.status_code!=200: return None
 		else: return str(r.json()['id'])
 
-class People(Object):
+class People(object):
 	def __init__(self,id=None,session=None):
 		self.id=id
+		self._id=id
 		self.session=session
+		
 		self.url_template_activity="https://weibo.cn/u/%s"
 		self.url_template_userinfo="https://weibo.cn/%s/info"
 		self.url_template_following="https://weibo.cn/%s/follow"
 		self.url_template_follower="https://weibo.cn/%s/fans"
 		
-		self.info=None
-		self.activity=None
-		self.following=None
-		self.follower=None
-		
+		self._Info=None
+	
+	@property
+	def id(self):
+		return self._id
+	
+	@id.setter
+	def id(self,value):
+		if isinstance(value,int):value=str(value)
+		if value:
+			self._id=value
+			if re.fullmatch(r'\d+',value):
+				self.url_template_activity="https://weibo.cn/u/%s"
+			else:
+				self.url_template_activity="https://weibo.cn/%s"
+	
 	@property
 	def url_activity(self):
 		return self.url_template_activity%(self.id) if self.id else None
@@ -147,41 +188,41 @@ class People(Object):
 		return self.url_template_follower%(self.id) if self.id else None
 	
 	@property
-	def userInfo(self):
+	def info(self):
 		if not self.id or not self.session: return None
-		if self.info: return self.info
+		if self._Info: return self._Info
 		
 		r=self.session.get(self.url_userinfo)
-		if r.status_code==200: self.info=weibo_parser.parse_information(r,self.session)
-		return self.info
+		if r.status_code==200:
+			self._Info=parse_information(r,self.session)
+			return self._Info
+		else: return None
 	
 	@property
-	def userActivity(self):
+	def activities(self):
 		if not self.id or not self.session: return None
 		
 		r=self.session.get(self.url_activity)
-		if r.status_code==200: self.activity=weibo_parser.parse_tweets(r,self.session)
-		return self.activity
+		if r.status_code==200: return parse_tweets(r,self.session)
+		else: return None
 
 	@property
-	def userFollowing(self):
+	def followings(self):
 		if not self.id or not self.session: return None
-		if self.following: return self.following
 		
 		r=self.session.get(self.url_following)
-		if r.status_code==200: self.following=weibo_parser.parse_followings(r,self.session)
-		return self.following
+		if r.status_code==200: return parse_followings(r,self.session)
+		else: return None
 
 	@property
-	def userFollower(self):
+	def followers(self):
 		if not self.id or not self.session: return None
-		if self.follower: return self.follower
 		
 		r=self.session.get(self.url_follower)
-		if r.status_code==200: self.follower=weibo_parser.parse_followers(r,self.session)
-		return self.follower
+		if r.status_code==200: return parse_followers(r,self.session)
+		else: return None
 
 if __name__=="__main__":
 	test_weibo=weibospider()
-	acts=test_weibo.getActivities('fake_fan',5)
+	acts=test_weibo.getActivities('三星GALAXY盖乐世',5)
 	print("\n".join(map(str,acts)))

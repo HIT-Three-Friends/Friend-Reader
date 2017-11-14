@@ -1,9 +1,4 @@
-# encoding=utf-8
-# ------------------------------------------
-#   版本：3.0
-#   日期：2016-12-01
-#   作者：九茶<http://blog.csdn.net/bone_ace>
-# ------------------------------------------
+
 
 from scrapy import Item, Field
 
@@ -24,7 +19,7 @@ class InformationItem(Item):
     VIPlevel = Field()  # 会员等级
     Authentication = Field()  # 认证
     URL = Field()  # 首页链接
-	Avatar_url = Field() #头像链接
+    Avatar_url = Field() #头像链接
 
 
 class TweetsItem(Item):
@@ -38,3 +33,7 @@ class TweetsItem(Item):
     Like = Field()  # 点赞数
     Comment = Field()  # 评论数
     Transfer = Field()  # 转载数
+    ActType = Field()	#动态类型
+    OriginContent = Field()	#转发原文
+    TransFrom = Field()	#转发来源
+    ImageUrls = Field()	#图片

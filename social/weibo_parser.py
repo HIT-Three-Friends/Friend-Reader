@@ -1,21 +1,12 @@
-# encoding=utf-8
-# ------------------------------------------
-#   版本：3.0
-#   日期：2016-12-01
-#   作者：九茶<http://blog.csdn.net/bone_ace>
-# ------------------------------------------
 
 import sys
-import logging
+import logging,traceback
 import datetime
 import requests
 import re
 from lxml import etree
-from Sina_spider3.weiboID import weiboID
-from Sina_spider3.scrapy_redis.spiders import RedisSpider
 from scrapy.selector import Selector
-from scrapy.http import Request
-from .items import TweetsItem, InformationItem, RelationshipsItem
+from .items import TweetsItem, InformationItem
 import logging
 
 host = "https://weibo.cn"
@@ -27,17 +18,16 @@ def parse_information(response,session):
 	ID = re.findall('(\d+)/info', response.url)[0]
 	try:
 		text1 = ";".join(selector.xpath('body/div[@class="c"]//text()').extract())  # 获取标签里的所有text()
-		print(selector.xpath('body/div[@class="c"]//text()').extract())
-		nickname = re.findall('昵称[：:]?(.*?);'.decode('utf8'), text1)
-		gender = re.findall('性别[：:]?(.*?);'.decode('utf8'), text1)
-		place = re.findall('地区[：:]?(.*?);'.decode('utf8'), text1)
-		briefIntroduction = re.findall('简介[：:]?(.*?);'.decode('utf8'), text1)
-		birthday = re.findall('生日[：:]?(.*?);'.decode('utf8'), text1)
-		sexOrientation = re.findall('性取向[：:]?(.*?);'.decode('utf8'), text1)
-		sentiment = re.findall('感情状况[：:]?(.*?);'.decode('utf8'), text1)
-		vipLevel = re.findall('会员等级[：:]?(.*?);'.decode('utf8'), text1)
-		authentication = re.findall('认证[：:]?(.*?);'.decode('utf8'), text1)
-		url = re.findall('互联网[：:]?(.*?);'.decode('utf8'), text1)
+		nickname = re.findall('昵称[：:]?(.*?);', text1)
+		gender = re.findall('性别[：:]?(.*?);', text1)
+		place = re.findall('地区[：:]?(.*?);', text1)
+		briefIntroduction = re.findall('简介[：:]?(.*?);', text1)
+		birthday = re.findall('生日[：:]?(.*?);', text1)
+		sexOrientation = re.findall('性取向[：:]?(.*?);', text1)
+		sentiment = re.findall('感情状况[：:]?(.*?);', text1)
+		vipLevel = re.findall('会员等级[：:]?(.*?);', text1)
+		authentication = re.findall('认证[：:]?(.*?);', text1)
+		url = re.findall('互联网[：:]?(.*?);', text1)
 		
 		informationItem["_id"] = ID
 		if nickname and nickname[0]:
@@ -71,7 +61,9 @@ def parse_information(response,session):
 		if url:
 			informationItem["URL"] = url[0]
 		
-		avatar_url=selector.xpath('body/div[@class="c"]/img/@src').extract()[0]
+		try: avatar_url=selector.xpath('body/div[@class="c"]/img/@src').extract()[0]
+		except Exception as e: logging.debug("get user img failed")
+
 		if avatar_url:
 			informationItem["Avatar_url"] =avatar_url
 
@@ -82,19 +74,20 @@ def parse_information(response,session):
 				selector = etree.HTML(r.content)
 				texts = ";".join(selector.xpath('//body//div[@class="tip2"]/a//text()'))
 				if texts:
-					num_tweets = re.findall('微博\[(\d+)\]'.decode('utf8'), texts)
-					num_follows = re.findall('关注\[(\d+)\]'.decode('utf8'), texts)
-					num_fans = re.findall('粉丝\[(\d+)\]'.decode('utf8'), texts)
+					num_tweets = re.findall('微博\[(\d+)\]', texts)
+					num_follows = re.findall('关注\[(\d+)\]', texts)
+					num_fans = re.findall('粉丝\[(\d+)\]', texts)
 					if num_tweets:
 						informationItem["Num_Tweets"] = int(num_tweets[0])
 					if num_follows:
 						informationItem["Num_Follows"] = int(num_follows[0])
 					if num_fans:
 						informationItem["Num_Fans"] = int(num_fans[0])
-		except Exception, e:
+		except Exception as e:
 			pass
-	except Exception, e:
-		logging.warning("get weibo user info failed"+str(e))
+	except Exception as e:
+		logging.warning("get weibo user info failed "+str(e))
+		traceback.print_exc()
 		return None
 	else:
 		return informationItem
@@ -103,7 +96,7 @@ def parse_tweets(response,session):
 	""" 抓取微博数据 """
 	while(True):
 		selector = Selector(response)
-		ID = re.findall('(\d+)/profile', response.url)[0]
+		ID = re.findall(r'(?<=/)[^/]*$', response.url)[0]
 		divs = selector.xpath('body/div[@class="c" and @id]')
 		for div in divs:
 			try:
@@ -111,15 +104,34 @@ def parse_tweets(response,session):
 				id = div.xpath('@id').extract_first()  # 微博ID
 				content = div.xpath('div/span[@class="ctt"]//text()').extract()  # 微博内容
 				cooridinates = div.xpath('div/a/@href').extract()  # 定位坐标
-				like = re.findall('赞\[(\d+)\]'.decode('utf8'), div.extract())  # 点赞数
-				transfer = re.findall('转发\[(\d+)\]'.decode('utf8'), div.extract())  # 转载数
-				comment = re.findall('评论\[(\d+)\]'.decode('utf8'), div.extract())  # 评论数
+				like = re.findall('赞\[(\d+)\]', div.extract())  # 点赞数
+				transfer = re.findall('转发\[(\d+)\]', div.extract())  # 转载数
+				comment = re.findall('评论\[(\d+)\]', div.extract())  # 评论数
 				others = div.xpath('div/span[@class="ct"]/text()').extract()  # 求时间和使用工具（手机或平台）
-
-				tweetsItems["_id"] = ID + "-" + id
+				
+				insidedivs=div.xpath('div')
+				for subdiv in insidedivs:
+					cmt = subdiv.xpath('span//text()').extract()
+					if ('转发理由:' in cmt):
+						tweetsItems['ActType']="trans"
+						
+						originContent=subdiv.xpath('text()').extract()[0]
+						originContent="".join(originContent).replace(u"\xa0", "").replace("\u200b","")
+						content,originContent=originContent,content
+						
+						transFrom=div.xpath('div[1]/span[@class="cmt"]/a//text()').extract()
+						transFrom="".join(transFrom).replace("\u200b","").replace(u"\xa0", "")
+					else:
+						tweetsItems['ActType']="origin"
+					
+				imgs=div.xpath('div//img[@alt="图片"]/@src').extract()
+				if imgs:
+					tweetsItems['ImageUrls']=imgs
+				
+				tweetsItems["_id"] = id
 				tweetsItems["ID"] = ID
 				if content:
-					tweetsItems["Content"] = " ".join(content).strip('[位置]'.decode('utf8'))  # 去掉最后的"[位置]"
+					tweetsItems["Content"] = "".join(content).strip('[位置]').replace("\u200b","").replace(u"\xa0", "")  # 去掉最后的"[位置]"
 				if cooridinates:
 					cooridinates = re.findall('center=([\d.,]+)', cooridinates[0])
 					if cooridinates:
@@ -131,15 +143,20 @@ def parse_tweets(response,session):
 				if comment:
 					tweetsItems["Comment"] = int(comment[0])
 				if others:
-					others = others[0].split('来自'.decode('utf8'))
+					others = others[0].split('来自')
 					tweetsItems["PubTime"] = others[0].replace(u"\xa0", "")
 					if len(others) == 2:
 						tweetsItems["Tools"] = others[1].replace(u"\xa0", "")
+				if tweetsItems['ActType']=="trans":
+					tweetsItems["OriginContent"]="".join(originContent).replace("\u200b","").replace(u"\xa0", "")
+					tweetsItems["TransFrom"]=transFrom
+					
+					
 				yield tweetsItems
-			except Exception, e:
-				pass
+			except Exception as e:
+				traceback.print_exc()
 
-		url_next = selector.xpath('body/div[@class="pa" and @id="pagelist"]/form/div/a[text()="下页"]/@href'.decode('utf8')).extract()
+		url_next = selector.xpath('body/div[@class="pa" and @id="pagelist"]/form/div/a[text()="下页"]/@href').extract()
 		if not url_next: break
 		response=session.get(url=host + url_next[0])
 		if response.status_code!=200:break
@@ -148,18 +165,17 @@ def parse_followings(response,session):
 	""" 抓取关注人列表 """
 	while(True):
 		selector = Selector(response)
-		peoples = selector.xpath('body/table/tbody/tr/td[2]/a')
+		peoples = selector.xpath('body/table/tr/td[2]/a[1]')
 		for people in peoples:
 			try:
-				screen_name=people.xpath('a/text()').extract()
-				id_url=people.xpath('a/@href').extract()
-				id=re.search(r'(?<=/u/)\d*',id_url).group(1)
-				
+				screen_name=people.xpath('text()').extract()[0]
+				id_url=people.xpath('@href').extract()[0]
+				id=re.search(r'(?<=/)[^/]*$',id_url).group()
 				yield (screen_name,id)
-			except Exception, e:
-				pass
+			except Exception as e:
+				logging.warning(str(e))
 
-		url_next = selector.xpath('body/div[@class="pa" and @id="pagelist"]/form/div/a[text()="下页"]/@href'.decode('utf8')).extract()
+		url_next = selector.xpath('body/div[@class="pa" and @id="pagelist"]/form/div/a[text()="下页"]/@href').extract()
 		if not url_next: break
 		response=session.get(url=host + url_next[0])
 		if response.status_code!=200:break
@@ -168,18 +184,17 @@ def parse_followers(response,session):
 	""" 抓取粉丝列表 """
 	while(True):
 		selector = Selector(response)
-		peoples = selector.xpath('body/table/tbody/tr/td[2]/a')
+		peoples = selector.xpath('body/table/tr/td[2]/a[1]')
 		for people in peoples:
 			try:
-				screen_name=people.xpath('a/text()').extract()
-				id_url=people.xpath('a/@href').extract()
-				id=re.search(r'(?<=/u/)\d*',id_url).group(1)
-				
+				screen_name=people.xpath('text()').extract()[0]
+				id_url=people.xpath('@href').extract()[0]
+				id=re.search(r'(?<=/)[^/]*$',id_url).group()
 				yield (screen_name,id)
-			except Exception, e:
-				pass
+			except Exception as e:
+				logging.warning(str(e))
 
-		url_next = selector.xpath('body/div[@class="pa" and @id="pagelist"]/form/div/a[text()="下页"]/@href'.decode('utf8')).extract()
+		url_next = selector.xpath('body/div[@class="pa" and @id="pagelist"]/form/div/a[text()="下页"]/@href').extract()
 		if not url_next: break
 		response=session.get(url=host + url_next[0])
 		if response.status_code!=200:break
