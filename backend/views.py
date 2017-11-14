@@ -341,4 +341,3 @@ def vitalityday(request,friendid):
         result['message'] = 'Please log in first!'
     return JsonResponse(result)
 
-def interest(request,friendid):
