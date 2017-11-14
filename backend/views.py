@@ -138,6 +138,7 @@ def friend(request,id):
                 friendinfo.update(name = name)
             if sex != -1:
                 friendinfo.update(sex = sex)
+            # 待修改
             if str(avatar) != '233.png':
                 Picture.objects.filter(user = idd).delete()
                 Picture.objects.create(user=idd,image = avatar)
