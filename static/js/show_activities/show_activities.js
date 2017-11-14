@@ -1,8 +1,23 @@
 var last_activity = null;
 var current_page = 0;
+var reading = null;
 function add_activity(activity){
     var new_activity = $("#event-template").clone();
     new_activity.css("display", "block");
+    //new_activity.find("#avatar").attr("src", activity["avatar"]);
+    new_activity.find("#event-time").html(activity["time"]);
+    new_activity.find("#title").html(activity["title"]);
+    new_activity.find("#name").html(activity["name"]);
+    new_activity.find("#url").attr("href", activity["url"]);
+    new_activity.find("#word").html(activity["word"]);
+    new_activity.find("#word").click(function(e) {
+        console.log("test");
+        new_activity.find("#word").css("max-height", "");
+        $(document).one("click", function () {
+            new_activity.find("#word").css("max-height", "200px");
+        });
+        e.stopPropagation();
+    });
     $("#timeline").append(new_activity);
 }
 function add_time(time) {

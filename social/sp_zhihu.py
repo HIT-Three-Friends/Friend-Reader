@@ -75,7 +75,7 @@ class zhihuspider(basespider):
 		pp=self.client.people(userid)
 		if pp.over:
 			if userid not in self.name_map:
-				try: self.followings2name_map(me)
+				try: self.followings2name_map(self.me)
 				except Exception as e: logging.error(str(e))
 			if userid in self.name_map:
 				userid=self.name_map[userid]
@@ -100,7 +100,7 @@ class zhihuspider(basespider):
 			}
 			#print(entry['source_url'])
 			imglist=re.findall(r'(?<=<img src=")(.*?)(?=")',entry['targetText'])
-			if isinstance(act.target,zhihu_oauth.Article):imglist[0:0]=[act.target.image_url]
+			if isinstance(act.target,zhihu_oauth.Article) and act.target.image_url:imglist[0:0]=[act.target.image_url]
 			if imglist: entry['imgs']=imglist
 
 			activityList.append(entry)
