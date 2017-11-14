@@ -92,7 +92,7 @@ def myfriends(request):
             else:
                 sex = request.POST['sex']
                 sex = int(sex)
-                avatar = request.FILES.get('avatar','/media/upload/233.png')
+                avatar = request.FILES.get('avatar','upload/233.png')
                 #新增计数
                 friendid = int(userinfo[0]) + 1
                 users.objects.filter(username = username).update(friendnum = int(friendid))
@@ -132,13 +132,14 @@ def friend(request,id):
             sex = request.POST.get('sex',-1)
             name = str(name)
             sex = int(sex)
-            avatar = request.FILES.get('avatar', 'ljrsb')
+            avatar = request.FILES.get('avatar', 'upload/233.png')
             if name != 'ljrsb':
                 friendinfo.update(name = name)
             if sex != -1:
                 friendinfo.update(sex = sex)
-            if avatar != 'ljrsb':
+            if avatar != 'upload/233.png':
                 friendinfo.update(avatar = avatar)
+            result['avatar'] = avatar
     else:
         result['verdict'] = 'error'
         result['message'] = 'Please log in first!'
