@@ -224,6 +224,8 @@ def activities(request):
                     temp['time'] = str(act['time'][3])+':'+str(act['time'][4]) +':'+str(act['time'][5])
                     temp['title'] = act['summary']+'<i>'+plat[int(ac['platform'])]+'.com</i>'
                     temp['word'] = act['targetText']
+                    temp['url'] = act['source_url']
+                    temp['tags'] = act['topics']
                     if act.__contains__('imgs'):
                         temp['pic'] = act['imgs']
                     else:
@@ -265,6 +267,8 @@ def askactivity(username,friendid,num):
             temp['time'] = str(act['time'][3]) + ':' + str(act['time'][4]) + ':' + str(act['time'][5])
             temp['title'] = act['summary'] + '<i>' + plat[int(ac['platform'])] + '.com</i>'
             temp['word'] = act['targetText']
+            temp['url'] = act['source_url']
+            temp['tags'] = act['topics']
             if act.__contains__('imgs') :
                 temp['pic'] = act['imgs']
             else:
@@ -337,4 +341,4 @@ def vitalityday(request,friendid):
         result['message'] = 'Please log in first!'
     return JsonResponse(result)
 
-#def interest
+def interest(request,friendid):
