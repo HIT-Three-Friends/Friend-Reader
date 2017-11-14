@@ -26,8 +26,8 @@ function putFormJson(node, data) {
 }
 function add_friend(new_friend, friend) {
     new_friend.css("display", "block");
-    //new_friend.find("#avatar").attr("src",friend["avatar"]);
-    new_friend.find("#avatar").attr("src", "/media/upload/233.png");
+    new_friend.find("#avatar").attr("src",friend["avatar"]);
+    //new_friend.find("#avatar").attr("src", "/media/upload/233.png");
     new_friend.find("#avatar").attr("data-friendid", friend["friendid"]);
     new_friend.find("#name").html(friend["name"]);
     if (friend["sex"] == 0) {
@@ -184,8 +184,7 @@ $(function() {
             $("#hidden-form").attr("action", "/friends/" + $("#avatar-modal #friendid").val() + "/");
             console.log($("#hidden-form").attr("action"));
             $("#hidden-form")[0].submit();
-
-            //location.reload();
+            location.reload();
         }
     });
 });
