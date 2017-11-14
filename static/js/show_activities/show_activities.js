@@ -12,7 +12,7 @@ function add_activity(activity){
     new_activity.find("#word").html(activity["word"]);
     new_activity.find("#word").click(function(e) {
         console.log("test");
-        new_activity.find("#word").css("height", "");
+        new_activity.find("#word").css("max-height", "");
         $(document).one("click", function () {
             new_activity.find("#word").css("max-height", "200px");
         });
