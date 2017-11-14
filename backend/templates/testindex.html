@@ -33,50 +33,49 @@
 <hr />
  <form  action="/friends/" method="GET">
      {% csrf_token %}
-    <input type="submit" value="show" />
+    <input type="submit" value="获取所有好友信息" />
 </form>
 <hr />
- <form  action="/friend/2/" method="GET">
+ <form  action="/friends/2/" method="GET">
      {% csrf_token %}
-    <input type="submit" value="show2" />
+    <input type="submit" value="获取2号好友信息" />
 </form>
 <hr />
- <form  action="/friend/2/" method="delete">
+ <form  action="/friends/2/" method="delete">
      {% csrf_token %}
-    <input type="submit" value="delete2" />
+    <input type="submit" value="删除2" />
 </form>
- <form  action="/socials/3/" method="POST">
+<hr />
+ <form  action="/friends/2/socials/0/" method="POST">
       {% csrf_token %}
     account:<input type="text" id="account" name="account" value="fuck"/>
-    platform:<input type="text" id="platform" name="platform" value="1"/>
-    <input type="submit" value="xinjian3" />
+    <input type="submit" value="为2号好友修改0号社交账号" />
 </form>
- <form  action="/socials/3/" method="GET">
+<hr />
+ <form  action="/friends/2/socials/0/" method="GET">
      {% csrf_token %}
-    <input type="submit" value="show2all" />
+    <input type="submit" value="展示2号好友0号社交账号" />
 </form>
-
- <form  action="/social/3/0/" method="GET">
-     {% csrf_token %}
-    <input type="submit" value="show21" />
-</form>
+<hr />
  <form  action="/activities/" method="GET">
-    <input type="submit" value="showacti" />
+    <input type="submit" value="展示所有好友动态" />
 </form>
+<hr />
 </form>
- <form  action="/activity/3/" method="GET">
+ <form  action="/activities/2/" method="GET">
     <input type="submit" value="展示2的动态" />
 </form>
-
+<hr />
 </form>
- <form  action="/vitality/3/months/" method="GET">
+ <form  action="/vitality/2/months/" method="GET">
      {% csrf_token %}
     account:<input type="text" id="year" name="year" value="2017"/>
     platform:<input type="text" id="month" name="month" value="11"/>
     <input type="submit" value="展示2的动态2017 11 月" />
 </form>
+<hr />
 </form>
- <form  action="/vitality/3/days/" method="GET">
+ <form  action="/vitality/2/days/" method="GET">
     <input type="submit" value="展示2的动态24小时" />
 </form>
 </body>

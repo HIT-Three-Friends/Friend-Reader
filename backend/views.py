@@ -74,10 +74,12 @@ def myfriends(request):
     #是否在线
     if userinfo:
         if request.method == 'GET':
-            ans = friends.objects.filter(user = username).values('friendid','name','sex','avatar')
+            ans = friends.objects.filter(user = username).values('id','friendid','name','sex','avatar')
             ans = list(ans)
             for x in ans:
                 x['avatar'] =  '/media/' + x['avatar']
+                xsocial = social.objects.filter(father = int(x['id'])).values('platform','account')
+                x['social'] = list(xsocial)
             result['friends'] = ans
         else :
             name = request.POST['name']
@@ -97,7 +99,12 @@ def myfriends(request):
                 #返回id
                 result['id'] = friendid
                 #新建好友
-                friends.objects.create(user = userof,friendid = friendid,name = name, sex = sex,avatar = avatar)
+                friends.objects.create(user=userof, friendid=friendid, name=name, sex=sex, avatar=avatar)
+                newid = friends.objects.filter(user=username, friendid=friendid).values('id')
+                newid = int(list(newid)[0]['id'])
+                social.objects.create(father=newid, platform=0, account="")
+                social.objects.create(father=newid, platform=1, account="")
+                social.objects.create(father=newid, platform=2, account="")
     else:
         result['verdict'] = 'error'
         result['message'] = 'Please log in first!'
@@ -111,30 +118,32 @@ def friend(request,id):
     # 是否在线
     if userinfo:
         if request.method == 'GET':
-            ans = friends.objects.filter(user=username,friendid = id).values('friendid', 'name', 'sex', 'avatar')
+            ans = friends.objects.filter(user=username,friendid = id).values('id','friendid', 'name', 'sex', 'avatar')
             dict2 = list(ans)[0]
             dict2['avatar'] = '/media/' + dict2['avatar']
+            xsocial = social.objects.filter(father=int(dict2['id'])).values('platform', 'account')
+            dict2['social'] = list(xsocial)
             result.update(dict2)
         elif request.method == 'DELETE':
             friends.objects.filter(user=username,friendid = id).delete()
         else:
-            name = request.POST['name']
-            sex = request.POST['sex']
+            friendinfo = friends.objects.filter(user=username, friendid=id)
+            name = request.POST['name','ljrsb']
+            sex = request.POST['sex',-1]
             name = str(name)
             sex = int(sex)
-            userof = str(username)
-            friendinfo = friends.objects.filter(user=username, name=name)
-            if friendinfo:
-                if list(friendinfo.values('friendid'))[0]!=id:
-                    result['verdict'] = 'fail'
-                    result['message'] = '好友重名'
-            avatar = request.FILES.get('avatar')
-            friends.objects.filter(user = userof,friendid=id).update(name=name, sex=sex, avatar=avatar)
+            avatar = request.FILES.get('avatar', 'ljrsb')
+            if name != 'ljrsb':
+                friendinfo.update(name = name)
+            if sex != -1:
+                friendinfo.update(sex = sex)
+            if avatar != 'ljrsb':
+                friendinfo.update(avatar = avatar)
     else:
         result['verdict'] = 'error'
         result['message'] = 'Please log in first!'
     return JsonResponse(result)
-
+"""
 #单个好友所有账号新建 + 列表
 def socials(request,friendid):
     result = {'verdict': 'success', 'message': 'Successful'}
@@ -158,7 +167,7 @@ def socials(request,friendid):
         result['verdict'] = 'error'
         result['message'] = 'Please log in first!'
     return JsonResponse(result)
-
+"""
 #单个好友单个社交账号查询 修改 删除
 def asocial(request,friendid,socialid):
     result = {'verdict': 'success', 'message': 'Successful'}
@@ -200,6 +209,10 @@ def activities(request):
             account = list(account)
             ans = []
             for ac in account:
+                if ac['account'] == "":
+                    continue
+                if ac['platform'] != 0:
+                    continue
                 ans = client.getActivities(ac['account'],plat[int(ac['platform'])],10)
                 for act in ans:
                     temp = {}
@@ -236,6 +249,10 @@ def askactivity(username,friendid,num):
     client = socialpc()
     plat = ['zhihu', 'weibo', 'tieba']
     for ac in account:
+        if ac['account'] == "":
+            continue
+        if ac['platform'] != 0:
+            continue
         ans = client.getActivities(ac['account'], plat[int(ac['platform'])], num)
         for act in ans:
             temp = {}
