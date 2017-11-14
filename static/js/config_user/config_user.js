@@ -26,7 +26,9 @@ function putFormJson(node, data) {
 }
 function add_friend(new_friend, friend) {
     new_friend.css("display", "block");
-    new_friend.find("#avatar").attr("src",friend["avatar"]);
+    //new_friend.find("#avatar").attr("src",friend["avatar"]);
+    new_friend.find("#avatar").attr("src", "/media/upload/233.png");
+    new_friend.find("#avatar").attr("data-friendid", friend["friendid"]);
     new_friend.find("#name").html(friend["name"]);
     if (friend["sex"] == 0) {
         new_friend.find("#sex").attr("src", "/static/images/male.png");
@@ -83,7 +85,6 @@ $(function() {
     });
     $('#friend-modal').on('show.bs.modal', function (event) {
         var button = $(event.relatedTarget); // Button that triggered the modal
-        var recipient = button.data('whatever'); // Extract info from data-* attributes
         var data = new Array();
         data["friendid"] = button.data("friendid");
         data["name"] = button.data("name");
@@ -132,7 +133,7 @@ $(function() {
         } else { // modify
             $.ajax({
                 url: "/friends/" + friendid + "/",
-                type: "PUT",
+                type: "POST",
                 data: {
                     "name" : modal.find("#name").val(),
                     "sex" : parseInt(modal.find("#sex").val())
@@ -159,6 +160,28 @@ $(function() {
                     }
                 }
             });
+        }
+    });
+
+    $('#friend-modal').on('show.bs.modal', function (event) {
+        var button = $(event.relatedTarget); // Button that triggered the modal
+        var friendid = button.data("friendid");
+        var modal = $("#avatar-modal");
+        modal.find("#friendid").val(friendid);
+        modal.find("#avatar").val("");
+    });
+    $("#button-avatar").click(function() {
+        var file = $("#avatar-modal #avatar").val();
+        console.log(file);
+        if (file == "") {
+            alert("请选择文件！");
+        } else {
+            $("#hidden-form #avatar").remove();
+            $("#hidden-form").append($("#avatar-modal #avatar").clone());
+            $("#hidden-form").attr("action", "/friends/" + $("#avatar-modal #friendid").val() + "/");
+            console.log($("#hidden-form").attr("action"));
+            $("#hidden-form")[0].submit();
+            //location.reload();
         }
     });
 });
