@@ -92,7 +92,7 @@ def myfriends(request):
             else:
                 sex = request.POST['sex']
                 sex = int(sex)
-                avatar = request.FILES.get('avatar')
+                avatar = request.FILES.get('avatar','/media/upload/233.png')
                 #新增计数
                 friendid = int(userinfo[0]) + 1
                 users.objects.filter(username = username).update(friendnum = int(friendid))
@@ -128,8 +128,8 @@ def friend(request,id):
             friends.objects.filter(user=username,friendid = id).delete()
         else:
             friendinfo = friends.objects.filter(user=username, friendid=id)
-            name = request.POST['name','ljrsb']
-            sex = request.POST['sex',-1]
+            name = request.POST.get('name','ljrsb')
+            sex = request.POST.get('sex',-1)
             name = str(name)
             sex = int(sex)
             avatar = request.FILES.get('avatar', 'ljrsb')
