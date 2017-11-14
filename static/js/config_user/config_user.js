@@ -184,7 +184,7 @@ $(function() {
             $("#hidden-form").attr("action", "/friends/" + $("#avatar-modal #friendid").val() + "/");
             console.log($("#hidden-form").attr("action"));
             $("#hidden-form")[0].submit();
-            location.reload();
+            //location.reload();
         }
     });
 });
