@@ -110,51 +110,29 @@
     </div>
 
     <div class="container" style="margin-top:100px" id="cnt">
-        <ul class="timeline">
+        <ul class="timeline" id="timeline">
 
             <!-- timeline time label -->
-            <li class="time-label">
-                <span class="bg-red">
-                    2017年10月24日
-                </span>
+            <li class="time-label" style="display:none" id="time-template">
+                <span class="bg-red" id="time"></span>
             </li>
             <!-- /.timeline-label -->
 
             <!-- timeline item -->
-            <li>
+            <li style="display:none" id="event-template">
                 <!-- timeline icon -->
-                <i class="fa fa-envelope bg-blue"></i>
+                <img src="/media/upload/233.png" width="40px" class="img-circle" style="display:inline" id="avatar">
                 <div class="timeline-item">
-                    <span class="time"><i class="fa fa-clock-o"></i> 12:05</span>
+                    <span class="time"><i class="fa fa-clock-o"></i><span id="event-time"> 12:05</span></span>
 
-                    <h3 class="timeline-header"><a href="#">汪泽堃</a> kugwzk回答了<strong>ACM的含金量真的在下降吗</strong><i> on zhihu.com</i></h3>
+                    <h3 class="timeline-header"><a href="#" id="name">汪泽堃</a> <span id="title">kugwzk回答了<strong>ACM的含金量真的在下降吗</strong></span></h3>
 
-                    <div class="timeline-body">
+                    <div class="timeline-body" id="word" style="overflow:hidden;max-height:200px">
                         我都没拿金牌，你还说含金量低
                     </div>
 
                     <div class="timeline-footer">
-                        <a class="btn btn-primary btn-xs">原文链接</a>
-                    </div>
-                </div>
-            </li>
-            <!-- END timeline item -->
-
-            <!-- timeline item -->
-            <li>
-                <!-- timeline icon -->
-                <i class="fa fa-envelope bg-blue"></i>
-                <div class="timeline-item">
-                    <span class="time"><i class="fa fa-clock-o"></i> 12:10</span>
-
-                    <h3 class="timeline-header"><a href="#">郑晨光</a> fake_fan回答了<strong>ACM的含金量真的在下降吗</strong><i> on zhihu.com</i></h3>
-
-                    <div class="timeline-body">
-                        我都没拿金牌，你还说含金量低
-                    </div>
-
-                    <div class="timeline-footer">
-                        <a class="btn btn-primary btn-xs">原文链接</a>
+                        <a class="btn btn-primary btn-xs" id="url">原文链接</a>
                     </div>
                 </div>
             </li>
@@ -162,5 +140,9 @@
 
 
         </ul>
+
+    </div>
+    <div class="footer navbar-fixed-bottom" style="background-color:#f39c12;display:none">
+        <center><h3>正在加载，请稍后......</h3></center>
     </div>
 {% endblock %}

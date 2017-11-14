@@ -1,47 +1,64 @@
-$(function() {
-    var totalheight = 0;
-    function loadData(){
-        totalheight = parseFloat($(window).height()) + parseFloat($(window).scrollTop());
-
-        if ($(document).height() <= totalheight) {  // 说明滚动条已达底部
-            console.log("load more");
-            /*这里使用Ajax加载更多内容*/
-            var container = $("#container"); // 加载容器
-            var data = {}; // 查询参数
-            // 当前页
-            var currentPage = parseInt(container.find('#currentPage').val());
-            // 总页数
-            var maxPage = parseInt(container.find('#maxPage').val());
-            // 查询日期范围
-            var startDate = container.find('#startDate').val();
-            var endDate = container.find('#endDate').val();
-            data.currentPage = currentPage;
-            data.maxPage = maxPage;
-            data.startDate =startDate;
-            data.endDate = endDate;
-            jQuery.ajax({
-                type:"POST",
-                url: "/servlet/query.do",
-                data:data,
-                dataType: "json",
-                beforeSend: function(XMLHttpRequest){
-                    $("#loading").css('display','');
-                }, success:function(response) {
-                    if(response.data){
-                        for(var i=0, length = response.data.length; i<length; i++){
-                            var html = response.data[i];
-                            var test = $(html);
-                            container.append(test);
-                        }
-                        container.find('#currentPage').val(parseInt(currentPage)+1);
-                        $("#loading").css('display','none');
+var last_activity = null;
+var current_page = 0;
+var reading = null;
+function add_activity(activity){
+    var new_activity = $("#event-template").clone();
+    new_activity.css("display", "block");
+    //new_activity.find("#avatar").attr("src", activity["avatar"]);
+    new_activity.find("#event-time").html(activity["time"]);
+    new_activity.find("#title").html(activity["title"]);
+    new_activity.find("#name").html(activity["name"]);
+    new_activity.find("#url").attr("href", activity["url"]);
+    new_activity.find("#word").html(activity["word"]);
+    new_activity.find("#word").click(function(e) {
+        console.log("test");
+        new_activity.find("#word").css("max-height", "");
+        $(document).one("click", function () {
+            new_activity.find("#word").css("max-height", "200px");
+        });
+        e.stopPropagation();
+    });
+    $("#timeline").append(new_activity);
+}
+function add_time(time) {
+    var new_time = $("#time-template").clone();
+    new_time.css("display", "block");
+    new_time.find("#time").html(time);
+    $("#timeline").append(new_time);
+}
+function loadData(){
+    var totalheight = parseFloat($(window).height()) + parseFloat($(window).scrollTop());
+    console.log("load");
+    console.log($(document).height());
+    console.log(totalheight);
+    if ($(document).height() - 101 <= totalheight) {  // 说明滚动条已达底部
+        current_page++;
+        console.log("load more");
+        $(".footer").css("display", "block");
+        $.ajax({
+            url: "/activities/",
+            type: "GET",
+            data: {
+                "page": current_page
+            },
+            success: function(data) {
+                var activities = data["activity"];
+                for (var i in activities) {
+                    var activity = activities[i];
+                    if (last_activity == null || activity["date"] != last_activity["date"]) {
+                        add_time(activity["date"]);
                     }
-                }, error:function(){
-                    alert("加载失败");
+                    last_activity = activity;
+                    add_activity(activity);
                 }
-            });
-        }
+                $(".footer").css("display", "none");
+            }
+        });
     }
+}
+
+$(function() {
+    loadData();
     $(window).scroll( function() {
         loadData();
     });
