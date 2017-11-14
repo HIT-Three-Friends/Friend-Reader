@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from django.http import JsonResponse
-from backend.models import users,friends,social
+from backend.models import users,friends,social,Picture
 from django.views.decorators.csrf import csrf_protect
 from django.db.models import Q
 from social import social as socialpc
@@ -77,7 +77,7 @@ def myfriends(request):
             ans = friends.objects.filter(user = username).values('id','friendid','name','sex','avatar')
             ans = list(ans)
             for x in ans:
-                x['avatar'] =  '/media/upload/' + x['avatar']
+                x['avatar'] =  '/media/' + x['avatar']
                 xsocial = social.objects.filter(father = int(x['id'])).values('platform','account')
                 x['social'] = list(xsocial)
             result['friends'] = ans
@@ -132,13 +132,18 @@ def friend(request,id):
             sex = request.POST.get('sex',-1)
             name = str(name)
             sex = int(sex)
-            avatar = request.FILES.get('avatar', 'upload/233.png')
+            avatar = request.FILES.get('avatar', '233.png')
+            idd = int(list(friendinfo.values('id'))[0]['id'])
             if name != 'ljrsb':
                 friendinfo.update(name = name)
             if sex != -1:
                 friendinfo.update(sex = sex)
-            if str(avatar) != 'upload/233.png':
-                friendinfo.update(avatar = avatar)
+            if str(avatar) != '233.png':
+                Picture.objects.filter(user = idd).delete()
+                Picture.objects.create(user=idd,image = avatar)
+                s = list( Picture.objects.filter(user = idd).values('image'))[0]['image']
+                s = str(s)
+                friendinfo.update(avatar=s)
     else:
         result['verdict'] = 'error'
         result['message'] = 'Please log in first!'
@@ -218,7 +223,7 @@ def activities(request):
                     temp = {}
                     temp['name'] = afriend['name']
                     temp['sex'] = afriend['sex']
-                    temp['avatar'] = act['avatar_url']
+                    temp['avatar'] = afriend['avatar']
                     temp['t'] = time.mktime(act['time'])
                     temp['date'] = str(act['time'][0])+'-'+str(act['time'][1]) +'-'+str(act['time'][2])
                     temp['time'] = str(act['time'][3])+':'+str(act['time'][4]) +':'+str(act['time'][5])
@@ -260,7 +265,7 @@ def askactivity(username,friendid,num):
             temp = {}
             temp['name'] = afriend['name']
             temp['sex'] = afriend['sex']
-            temp['avatar'] = act['avatar_url']
+            temp['avatar'] = afriend['avatar']
             temp['t'] = time.mktime(act['time'])
             temp['G'] = act['time']
             temp['date'] = str(act['time'][0]) + '-' + str(act['time'][1]) + '-' + str(act['time'][2])

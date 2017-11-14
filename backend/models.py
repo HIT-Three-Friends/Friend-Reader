@@ -25,4 +25,8 @@ class social(models.Model):
     platform = models.IntegerField(default=0)
     account = models.CharField(max_length=30)
 
+class Picture(models.Model):
+    """docstring for Picture"""
+    user = models.IntegerField(default=0)
+    image = models.ImageField(null=True, blank=True, upload_to="upload")
 # Create your models here.
