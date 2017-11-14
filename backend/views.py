@@ -39,7 +39,7 @@ def user(request):
         if userinfo:
             result['username'] = username
             result['email'] = str(list(userinfo.values('email'))[0]['email'])
-            result['avatar'] = '/media/'+str(list(userinfo.values('avatar'))[0]['avatar'])
+            #result['avatar'] = '/media/'+str(list(userinfo.values('avatar'))[0]['avatar'])
         else:
             result['verdict'] = 'error'
             result['message'] = 'Please log in first!'
