@@ -13,7 +13,6 @@ function randomNum(minNum,maxNum){
 }
 function putFormJson(node, data) {
     node.find("input,select").each(function() {
-        console.log(this.tagName + " " + this.name);
         if (this.tagName.toLowerCase() == "select") {
             $(this).children().each(function() {
                 if ($(this).val() == data[this.name]) {
@@ -21,14 +20,13 @@ function putFormJson(node, data) {
                 }
             });
         } else if(this.tagName.toLowerCase() == "input") {
-            console.log(data[this.name] + " " + this.name);
             $(this).val(data[this.name]);
         }
     });
 }
 function add_friend(new_friend, friend) {
     new_friend.css("display", "block");
-    new_friend.find("#avatar").attr("src","/media/"+friend["avatar"]);
+    new_friend.find("#avatar").attr("src",friend["avatar"]);
     new_friend.find("#name").html(friend["name"]);
     if (friend["sex"] == 0) {
         new_friend.find("#sex").attr("src", "/static/images/male.png");
@@ -57,23 +55,17 @@ function add_friend(new_friend, friend) {
             });
         }
     });
-    $.ajax({
-        url: "/socials/" + friend["friendid"] + "/",
-        type: "GET",
-        success: function(data) {
-            console.log(friend["friendid"]);
-            var baseurl = new Array("//zhihu.com/people/", "//weibo.com/", "//github.com/");
-            for (var j = 0; j < data["socials"].length; j++) {
-                if (data["socials"][j]["account"] != "") {
-                    new_friend.find("#id"+j).html(data["socials"][j]["account"]);
-                    new_friend.find("#url"+j).attr("href", baseurl[j] + data["socials"][j]["account"]);
-                    new_friend.find("#button-modify").attr("data-account"+j, data["socials"][j]["account"]);
-                }
-            }
-            new_friend.find("#vitality").html(randomNum(10, 50));
-            $("#body").append(new_friend);
+    var baseurl = new Array("//zhihu.com/people/", "//weibo.com/", "//github.com/");
+    var social = friend["social"];
+    for (var j = 0; j < social.length; j++) {
+        if (social[j]["account"] != "") {
+            new_friend.find("#id"+j).html(social[j]["account"]);
+            new_friend.find("#url"+j).attr("href", baseurl[j] + social[j]["account"]);
+            new_friend.find("#button-modify").attr("data-account"+j, social[j]["account"]);
         }
-    });
+    }
+    new_friend.find("#vitality").html(randomNum(10, 50));
+    $("#body").append(new_friend);
 }
 $(function() {
     $.ajax({
@@ -105,20 +97,21 @@ $(function() {
     $("#button-friend").click(function() {
         var friendid = $("#friend-modal #friendid").val();
         var modal = $("#friend-modal");
+        console.log(parseInt(modal.find("#sex").val()));
         if (friendid == "") { // new
             $.ajax({
                 url: "/friends/",
                 type: "POST",
                 data: {
                     "name" : modal.find("#name").val(),
-                    "sex" : parseInt(modal.find("id").val())
+                    "sex" : parseInt(modal.find("#sex").val())
                 },
                 success: function(data) {
                     var friendid = data["id"];
                     var cnt = 0;
                     for (var i = 0; i < 3; i++) {
                         $.ajax({
-                            url: "/friends/" + friendid + "/social/",
+                            url: "/friends/" + friendid + "/socials/" + i + "/",
                             type: "POST",
                             data: {
                                 "platform": i,
@@ -141,14 +134,14 @@ $(function() {
                 type: "PUT",
                 data: {
                     "name" : modal.find("#name").val(),
-                    "sex" : parseInt(modal.find("id").val())
+                    "sex" : parseInt(modal.find("#sex").val())
                 },
                 success: function(data) {
                     var friendid = data["id"];
                     var cnt = 0;
                     for (var i = 0; i < 3; i++) {
                         $.ajax({
-                            url: "/friends/" + friendid + "/social/",
+                            url: "/friends/" + friendid + "/socials/" + i + "/",
                             type: "POST",
                             data: {
                                 "platform": i,
