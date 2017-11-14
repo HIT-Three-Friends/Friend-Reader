@@ -11,6 +11,7 @@ class basespider(object):
 	
 	def loadConfig(self):
 		self.socialRoot="./social/"
+		#self.socialRoot="./"
 		self.allConfig=configparser.ConfigParser(interpolation=None)
 		self.allConfig.read(self.socialRoot+"config.properties",encoding='utf-8')
 		try:
@@ -21,4 +22,4 @@ class basespider(object):
 			
 		
 	def prepare(self):
-		logging.basicConfig(format='%(asctime)s --%(lineno)s -- %(levelname)s:%(message)s', level=logging.DEBUG)
+		logging.basicConfig(format='%(asctime)s --%(lineno)s -- %(levelname)s:%(message)s', level=logging.INFO)
