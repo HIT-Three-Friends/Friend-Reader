@@ -58,6 +58,7 @@
     </script>
     <script src="/static/js/adminlte.min.js"></script>
     <script src="/static/js/current_user.js"></script>
+    <script src="/static/js/config_user/config_user.js"></script>
 {% endblock %}
 
 {% block body %}
@@ -132,74 +133,104 @@
     <div class="container" id="body" style="margin-top:100px" >
 
 
-    <div class="col-md-4" style="border:dashed #cccccc 1px;">
-          <!-- Widget: user widget style 1 -->
-          <div class="box box-widget widget-user-2" style="opacity:0">
-            <!-- Add the bg color to the header using any of the bg-* classes -->
-            <div class="widget-user-header bg-yellow">
-              <div class="widget-user-image">
-                <img class="img-circle" src="/media/upload/kugwzk.bmp" alt="User Avatar">
-              </div>
-              <!-- /.widget-user-image -->
-              <h3 class="widget-user-username">汪泽堃</h3>
-              <h5 class="widget-user-desc">好友</h5>
-            </div>
-            <div class="box-footer no-padding">
-              <ul class="nav nav-stacked">
-                <li><a href="#">知乎账号 <span class="pull-right badge bg-blue">kugwzk</span></a></li>
-                <li><a href="#">微博账号 <span class="pull-right badge bg-aqua">kugwzk</span></a></li>
-                <li><a href="#">GitHub账号 <span class="pull-right badge bg-green">kugwzk</span></a></li>
-                <li><a href="#">Followers <span class="pull-right badge bg-red">842</span></a></li>
-              </ul>
-            </div>
+    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#friend-modal" data-name="" data-sex="" data-account0="" data-account1="" data-account2="" data-friendid="">新建好友</button>
+
+    <div class="modal fade" id="friend-modal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabe2">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title" id="exampleModalLabe2">修改朋友信息</h4>
           </div>
-          <!-- /.widget-user -->
+          <div class="modal-body">
+            <form>
+              <div class="form-group" style="display:none">
+                <label for="friendid" class="control-label">朋友ID</label>
+                <input type="text" class="form-control" id="friendid" name="friendid">
+              </div>
+              <div class="form-group">
+                <label for="name" class="control-label">姓名</label>
+                <input type="text" class="form-control" id="name" name="name">
+              </div>
+              <div class="form-group">
+                <label for="sex" class="control-label">性别</label>
+                <select class="form-control" id="sex" name="sex">
+                    <option value="0">男</option>
+                    <option value="1">女</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="account0" class="control-label">知乎账号</label>
+                <input type="text" class="form-control" id="account0" name="account0">
+              </div>
+              <div class="form-group">
+                <label for="account1" class="control-label">微博账号</label>
+                <input type="text" class="form-control" id="account1" name="account1">
+              </div>
+              <div class="form-group">
+                <label for="account2" class="control-label">GitHub账号</label>
+                <input type="text" class="form-control" id="account2" name="account2">
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+            <button type="button" class="btn btn-primary" id="button-friend">提交</button>
+          </div>
         </div>
-    <div class="col-md-4">
+      </div>
+    </div>
+
+    <div class="modal fade" id="avatar-modal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title" id="exampleModalLabel">New message</h4>
+          </div>
+          <div class="modal-body">
+            <form>
+              <div class="form-group">
+                <label for="recipient-name" class="control-label">Recipient:</label>
+                <input type="text" class="form-control" id="recipient-name">
+              </div>
+              <div class="form-group">
+                <label for="message-text" class="control-label">Message:</label>
+                <textarea class="form-control" id="message-text"></textarea>
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            <button type="button" class="btn btn-primary">Send message</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-4" style="display:none" id="friend-template">
           <!-- Widget: user widget style 1 -->
           <div class="box box-widget widget-user-2">
             <!-- Add the bg color to the header using any of the bg-* classes -->
             <div class="widget-user-header bg-yellow">
               <div class="widget-user-image">
-                <img class="img-circle" src="/media/upload/kugwzk.bmp" alt="User Avatar">
+                <img class="img-circle" src="/media/upload/kugwzk.bmp" alt="User Avatar" id="avatar">
               </div>
               <!-- /.widget-user-image -->
-              <h3 class="widget-user-username">汪泽堃</h3>
-              <h5 class="widget-user-desc">好友</h5>
+                <h3 class="widget-user-username"><span id="name">汪泽堃</span></h3>
+              <h5 class="widget-user-desc"><img id="sex" style="height:18px;display:inline"></h5>
             </div>
             <div class="box-footer no-padding">
               <ul class="nav nav-stacked">
-                <li><a href="#">知乎账号 <span class="pull-right badge bg-blue">kugwzk</span></a></li>
-                <li><a href="#">微博账号 <span class="pull-right badge bg-aqua">kugwzk</span></a></li>
-                <li><a href="#">GitHub账号 <span class="pull-right badge bg-green">kugwzk</span></a></li>
-                <li><a href="#">Followers <span class="pull-right badge bg-red">842</span></a></li>
+                <li><a href="#" id="url0">知乎账号 <span class="pull-right badge bg-blue" id="id0">未指定</span></a></li>
+                <li><a href="#" id="url1">微博账号 <span class="pull-right badge bg-aqua" id="id1">未指定</span></a></li>
+                <li><a href="#" id="url2">GitHub账号 <span class="pull-right badge bg-green" id="id2">未指定</span></a></li>
+                <li><a href="#">活跃度 <span class="pull-right badge bg-red" id="vitality">842</span></a></li>
+                <li><a href="#" id="button-modify" data-toggle="modal" data-target="#friend-modal" data-name="" data-sex="" data-account0="" data-account1="" data-account2="">修改 <span class="pull-right badge bg-purple"></span></a></li>
+                <li><a href="#" id="button-delete">删除 <span class="pull-right badge bg-purple"></span></a></li>
               </ul>
             </div>
           </div>
           <!-- /.widget-user -->
-        </div>
-    <div class="col-md-4">
-          <!-- Widget: user widget style 1 -->
-          <div class="box box-widget widget-user-2">
-            <!-- Add the bg color to the header using any of the bg-* classes -->
-            <div class="widget-user-header bg-yellow">
-              <div class="widget-user-image">
-                <img class="img-circle" src="/media/upload/fake_fan.bmp" alt="User Avatar">
-              </div>
-              <!-- /.widget-user-image -->
-              <h3 class="widget-user-username">郑晨光</h3>
-              <h5 class="widget-user-desc">好友</h5>
-            </div>
-            <div class="box-footer no-padding">
-              <ul class="nav nav-stacked">
-                <li><a href="#">知乎账号<span class="pull-right badge bg-blue" id="zhihu">fake_fan</span></a></li>
-                <li><a href="#">微博账号<span class="pull-right badge bg-aqua" id="weibo">fake_fan</span></a></li>
-                <li><a href="#">GitHub账号<span class="pull-right badge bg-green" id="github">fake_fan</span></a></li>
-                <li><a href="#">Followers <span class="pull-right badge bg-red">84</span></a></li>
-              </ul>
-            </div>
-          </div>
-          <!-- /.widget-user -->
-        </div>
     </div>
 {% endblock %}
