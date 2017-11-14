@@ -45,18 +45,18 @@
      {% csrf_token %}
     <input type="submit" value="delete2" />
 </form>
- <form  action="/socials/2/" method="POST">
+ <form  action="/socials/3/" method="POST">
       {% csrf_token %}
     account:<input type="text" id="account" name="account" value="fuck"/>
     platform:<input type="text" id="platform" name="platform" value="1"/>
-    <input type="submit" value="xinjian" />
+    <input type="submit" value="xinjian3" />
 </form>
- <form  action="/socials/2/" method="GET">
+ <form  action="/socials/3/" method="GET">
      {% csrf_token %}
     <input type="submit" value="show2all" />
 </form>
 
- <form  action="/social/2/1/" method="GET">
+ <form  action="/social/3/0/" method="GET">
      {% csrf_token %}
     <input type="submit" value="show21" />
 </form>
@@ -64,19 +64,19 @@
     <input type="submit" value="showacti" />
 </form>
 </form>
- <form  action="/activity/2/" method="GET">
+ <form  action="/activity/3/" method="GET">
     <input type="submit" value="展示2的动态" />
 </form>
 
 </form>
- <form  action="/vitality/2/months/" method="GET">
+ <form  action="/vitality/3/months/" method="GET">
      {% csrf_token %}
     account:<input type="text" id="year" name="year" value="2017"/>
     platform:<input type="text" id="month" name="month" value="11"/>
     <input type="submit" value="展示2的动态2017 11 月" />
 </form>
 </form>
- <form  action="/vitality/2/days/" method="GET">
+ <form  action="/vitality/3/days/" method="GET">
     <input type="submit" value="展示2的动态24小时" />
 </form>
 </body>

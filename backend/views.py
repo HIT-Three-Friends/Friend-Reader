@@ -39,7 +39,7 @@ def user(request):
         if userinfo:
             result['username'] = username
             result['email'] = str(list(userinfo.values('email'))[0]['email'])
-            result['avatar'] = 'upload/233.png'
+            result['avatar'] = '/media/'+str(list(userinfo.values('avatar'))[0]['avatar'])
         else:
             result['verdict'] = 'error'
             result['message'] = 'Please log in first!'
@@ -75,7 +75,10 @@ def myfriends(request):
     if userinfo:
         if request.method == 'GET':
             ans = friends.objects.filter(user = username).values('friendid','name','sex','avatar')
-            result['friends'] = list(ans)
+            ans = list(ans)
+            for x in ans:
+                x['avatar'] =  '/media/' + x['avatar']
+            result['friends'] = ans
         else :
             name = request.POST['name']
             name = str(name)
@@ -110,6 +113,7 @@ def friend(request,id):
         if request.method == 'GET':
             ans = friends.objects.filter(user=username,friendid = id).values('friendid', 'name', 'sex', 'avatar')
             dict2 = list(ans)[0]
+            dict2['avatar'] = '/media/' + dict2['avatar']
             result.update(dict2)
         elif request.method == 'DELETE':
             friends.objects.filter(user=username,friendid = id).delete()
@@ -244,7 +248,7 @@ def askactivity(username,friendid,num):
             temp['time'] = str(act['time'][3]) + ':' + str(act['time'][4]) + ':' + str(act['time'][5])
             temp['title'] = act['summary'] + '<i>' + plat[int(ac['platform'])] + '.com</i>'
             temp['word'] = act['targetText']
-            if act.__contains__('imgs'):
+            if act.__contains__('imgs') :
                 temp['pic'] = act['imgs']
             else:
                 temp['pic'] = []
@@ -315,3 +319,5 @@ def vitalityday(request,friendid):
         result['verdict'] = 'error'
         result['message'] = 'Please log in first!'
     return JsonResponse(result)
+
+#def interest
