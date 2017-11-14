@@ -1,9 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-__version__ = '0.0.1'
-__author__ = 'Han Yue (1224067801@qq.com)'
-
 import os,time
 import pickle,logging,re,configparser
 import zhihu_oauth
@@ -73,7 +70,7 @@ class zhihuspider(basespider):
 			elif isinstance(target,zhihu_oauth.Article):
 				return (target.excerpt,[],self.url_template_article%(target.id))
 			else:
-				return (None,[],"")
+				return ("",[],"")
 		
 		pp=self.client.people(userid)
 		if pp.over:
