@@ -179,8 +179,9 @@ def asocial(request,friendid,socialid):
         result['verdict'] = 'error'
         result['message'] = 'Please log in first!'
     return JsonResponse(result)
+
 #获取好友动态 全部
-def activity(request):
+def activities(request):
     result = {'verdict': 'success', 'message': 'Successful'}
     plat = ['zhihu','weibo','tieba']
     username = request.session.get('username', '')
@@ -221,8 +222,9 @@ def activity(request):
         result['message'] = 'Please log in first!'
     return JsonResponse(result)
 
-def askactivity(username,id):
-    afriend = friends.objects.filter(user = username,friendid=id).values('id','name','sex','avatar')
+#获取某个好友动态
+def askactivity(username,friendid,num):
+    afriend = list(friends.objects.filter(user = username,friendid=friendid).values('id','name','sex','avatar'))[0]
     account = social.objects.filter(father=afriend['id']).values('platform', 'account')
     account = list(account)
     ans = []
@@ -230,13 +232,14 @@ def askactivity(username,id):
     client = socialpc()
     plat = ['zhihu', 'weibo', 'tieba']
     for ac in account:
-        ans = client.getActivities(ac['account'], plat[int(ac['platform'])], 10)
+        ans = client.getActivities(ac['account'], plat[int(ac['platform'])], num)
         for act in ans:
             temp = {}
             temp['name'] = afriend['name']
             temp['sex'] = afriend['sex']
             temp['avatar'] = act['avatar_url']
             temp['t'] = time.mktime(act['time'])
+            temp['G'] = act['time']
             temp['date'] = str(act['time'][0]) + '-' + str(act['time'][1]) + '-' + str(act['time'][2])
             temp['time'] = str(act['time'][3]) + ':' + str(act['time'][4]) + ':' + str(act['time'][5])
             temp['title'] = act['summary'] + '<i>' + plat[int(ac['platform'])] + '.com</i>'
@@ -247,3 +250,68 @@ def askactivity(username,id):
                 temp['pic'] = []
             temp['Video'] = []
             acts.append(temp)
+    acts.sort(key=lambda x: x['t'])
+    acts.reverse()
+    return acts
+
+def activity(request,friendid):
+    result = {'verdict': 'success', 'message': 'Successful'}
+    username = request.session.get('username', '')
+    userinfo = users.objects.filter(username=username)
+    if userinfo:
+        ans = askactivity(username,friendid,20)
+        result['activitynum'] = len(ans)
+        result['activity'] = ans
+    else:
+        result['verdict'] = 'error'
+        result['message'] = 'Please log in first!'
+    return JsonResponse(result)
+
+#获取月活跃度
+def vitalitymon(request,friendid):
+    result = {'verdict': 'success', 'message': 'Successful'}
+    days = [0,31,28,31,30,31,30,31,31,30,31,30,31]
+    username = request.session.get('username', '')
+    userinfo = users.objects.filter(username=username)
+    year = int(request.GET['year'])
+    month = int(request.GET['month'])
+    renum = days[month]
+    if (year % 4 == 0 and year % 100 != 4) or year % 400 == 0 :
+        renum += 1
+    L = [0 for x in range(0,renum)]
+    if userinfo:
+        tnum = 20
+        ans = askactivity(username, friendid, tnum)
+        sum = len(ans)
+        while (ans[-1]['G'][0] > year or (ans[-1]['G'][0] == year and ans[-1]['G'][1] >= month)) :
+            tnum *= 2
+            ans = askactivity(username, friendid, tnum)
+            if sum == len(ans):
+                break
+            else:
+                sum = len(ans)
+        for x in ans:
+            if x['G'][0] == year and x['G'][1] == month :
+                L[x['G'][2]-1]+=1
+        result['days'] = renum
+        result['vitality'] = L
+    else:
+        result['verdict'] = 'error'
+        result['message'] = 'Please log in first!'
+    return JsonResponse(result)
+
+#获取日活跃度
+def vitalityday(request,friendid):
+    result = {'verdict': 'success', 'message': 'Successful'}
+    username = request.session.get('username', '')
+    userinfo = users.objects.filter(username=username)
+    L = [0 for x in range(1,25)]
+    if userinfo:
+        ans = askactivity(username, friendid,200)
+        for x in ans:
+            L[int(x['G'][3])]+=1
+        result['vitality'] = L
+    else:
+        result['verdict'] = 'error'
+        result['message'] = 'Please log in first!'
+    return JsonResponse(result)
