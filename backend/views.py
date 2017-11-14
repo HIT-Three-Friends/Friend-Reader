@@ -225,7 +225,7 @@ def activities(request):
                     temp['title'] = act['summary']+'<i>'+plat[int(ac['platform'])]+'.com</i>'
                     temp['word'] = act['targetText']
                     temp['url'] = act['source_url']
-                    temp['tags'] = act['topics']
+                    temp['tags'] = act.get('topics',[])
                     if act.__contains__('imgs'):
                         temp['pic'] = act['imgs']
                     else:
@@ -268,7 +268,7 @@ def askactivity(username,friendid,num):
             temp['title'] = act['summary'] + '<i>' + plat[int(ac['platform'])] + '.com</i>'
             temp['word'] = act['targetText']
             temp['url'] = act['source_url']
-            temp['tags'] = act['topics']
+            temp['tags'] = act.get('topics', [])
             if act.__contains__('imgs') :
                 temp['pic'] = act['imgs']
             else:
@@ -341,3 +341,40 @@ def vitalityday(request,friendid):
         result['message'] = 'Please log in first!'
     return JsonResponse(result)
 
+def interests(request,friendid):
+    result = {'verdict': 'success', 'message': 'Successful'}
+    username = request.session.get('username', '')
+    userinfo = users.objects.filter(username=username)
+    byear = int(request.GET['byear'])
+    bmonth = int(request.GET['bmonth'])
+    bday = int(request.GET['bday'])
+    eyear = int(request.GET['eyear'])
+    emonth = int(request.GET['emonth'])
+    eday = int(request.GET['eday'])
+    if userinfo:
+        tnum = 20
+        ans = askactivity(username, friendid, tnum)
+        sum = len(ans)
+        while (ans[-1]['G'][0] > byear or (ans[-1]['G'][0] == byear and ans[-1]['G'][1] >= bmonth) or (ans[-1]['G'][0] == byear and ans[-1]['G'][1] == bmonth and ans[-1]['G'][2] >= bday) ):
+            tnum *= 2
+            ans = askactivity(username, friendid, tnum)
+            if sum == len(ans):
+                break
+            else:
+                sum = len(ans)
+        mm = {}
+        percent = []
+        tags = []
+        interestnum = 0
+        for x in ans:
+            if (x['G'][0] > eyear) or ( x['G'][0] == eyear and x['G'][1] > emonth ) or (ans[-1]['G'][0] == eyear and ans[-1]['G'][1] == emonth and ans[-1]['G'][2] > eday): continue
+            if (x['G'][0] < byear) or (x['G'][0] == byear and x['G'][1] < bmonth) or (ans[-1]['G'][0] == byear and ans[-1]['G'][1] == bmonth and ans[-1]['G'][2] < bday): break
+            for y in x['tags']:
+                if mm.__contains__(y):percent
+
+        #result['days'] = renum
+        #result['vitality'] = L
+    else:
+        result['verdict'] = 'error'
+        result['message'] = 'Please log in first!'
+    return JsonResponse(result)
