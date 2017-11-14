@@ -163,12 +163,15 @@ $(function() {
         }
     });
 
+
     $('#avatar-modal').on('show.bs.modal', function (event) {
         var button = $(event.relatedTarget); // Button that triggered the modal
         var friendid = button.data("friendid");
         var modal = $("#avatar-modal");
         modal.find("#friendid").val(friendid);
         modal.find("#avatar").val("");
+        console.log(friendid);
+
     });
     $("#button-avatar").click(function() {
         var file = $("#avatar-modal #avatar").val();
@@ -181,6 +184,7 @@ $(function() {
             $("#hidden-form").attr("action", "/friends/" + $("#avatar-modal #friendid").val() + "/");
             console.log($("#hidden-form").attr("action"));
             $("#hidden-form")[0].submit();
+
             //location.reload();
         }
     });

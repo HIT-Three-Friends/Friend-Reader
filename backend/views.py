@@ -77,7 +77,7 @@ def myfriends(request):
             ans = friends.objects.filter(user = username).values('id','friendid','name','sex','avatar')
             ans = list(ans)
             for x in ans:
-                x['avatar'] =  '/media/' + x['avatar']
+                x['avatar'] =  '/media/upload/' + x['avatar']
                 xsocial = social.objects.filter(father = int(x['id'])).values('platform','account')
                 x['social'] = list(xsocial)
             result['friends'] = ans
@@ -92,7 +92,7 @@ def myfriends(request):
             else:
                 sex = request.POST['sex']
                 sex = int(sex)
-                avatar = request.FILES.get('avatar','/media/upload/233.png')
+                avatar = request.FILES.get('avatar','233.png')
                 #新增计数
                 friendid = int(userinfo[0]) + 1
                 users.objects.filter(username = username).update(friendnum = int(friendid))
@@ -132,12 +132,12 @@ def friend(request,id):
             sex = request.POST.get('sex',-1)
             name = str(name)
             sex = int(sex)
-            avatar = request.FILES.get('avatar', 'ljrsb')
+            avatar = request.FILES.get('avatar', 'upload/233.png')
             if name != 'ljrsb':
                 friendinfo.update(name = name)
             if sex != -1:
                 friendinfo.update(sex = sex)
-            if avatar != 'ljrsb':
+            if str(avatar) != 'upload/233.png':
                 friendinfo.update(avatar = avatar)
     else:
         result['verdict'] = 'error'
