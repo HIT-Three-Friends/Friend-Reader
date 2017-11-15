@@ -29,4 +29,7 @@ class Picture(models.Model):
     """docstring for Picture"""
     user = models.IntegerField(default=0)
     image = models.ImageField(null=True, blank=True, upload_to="upload")
+
+
+
 # Create your models here.
