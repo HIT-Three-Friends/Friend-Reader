@@ -92,7 +92,7 @@ def myfriends(request):
             else:
                 sex = request.POST['sex']
                 sex = int(sex)
-                avatar = request.FILES.get('avatar','233.png')
+                avatar = '/upload/2345.bmp'
                 #新增计数
                 friendid = int(userinfo[0]) + 1
                 users.objects.filter(username = username).update(friendnum = int(friendid))
@@ -132,18 +132,19 @@ def friend(request,id):
             sex = request.POST.get('sex',-1)
             name = str(name)
             sex = int(sex)
-            avatar = request.FILES.get('avatar', '233.png')
+            avatar = request.FILES.get('avatar', '/upload/2345.bmp')
             idd = int(list(friendinfo.values('id'))[0]['id'])
             if name != 'ljrsb':
                 friendinfo.update(name = name)
             if sex != -1:
                 friendinfo.update(sex = sex)
             # 待修改
-            if str(avatar) != '233.png':
+            if str(avatar) != '/upload/2345.bmp':
                 Picture.objects.filter(user = idd).delete()
                 Picture.objects.create(user=idd,image = avatar)
                 s = list( Picture.objects.filter(user = idd).values('image'))[0]['image']
                 s = str(s)
+                result['verdict'] = 's'
                 friendinfo.update(avatar=s)
     else:
         result['verdict'] = 'error'
@@ -206,7 +207,13 @@ def activities(request):
     username = request.session.get('username', '')
     userinfo = users.objects.filter(username=username)
     client = socialpc()
+    page = int(request.GET['page'])
+    if page > 4 :
+        result['activitynum'] = 0
+        result['activity'] = []
+        return JsonResponse(result)
     acts = []
+    cnt = 0
     if userinfo:
         id = friends.objects.filter(user = username).values('id','name','sex','avatar')
         id = list(id)
@@ -217,10 +224,12 @@ def activities(request):
             for ac in account:
                 if ac['account'] == "":
                     continue
-                if ac['platform'] != 0:
+                if ac['platform'] == 2:
                     continue
-                ans = client.getActivities(ac['account'],plat[int(ac['platform'])],10)
+                ans = client.getActivities(ac['account'],plat[int(ac['platform'])],page*10)
+                #ans = client.getActivities(ac['account'],plat[int(ac['platform'])],10)
                 for act in ans:
+                    cnt += 1
                     temp = {}
                     temp['name'] = afriend['name']
                     temp['sex'] = afriend['sex']
@@ -240,8 +249,9 @@ def activities(request):
                     acts.append(temp)
         acts.sort(key=lambda x:x['t'])
         acts.reverse()
-        result['activitynum'] = len(acts)
-        result['activity'] = acts
+        result['activitynum'] = 10
+        result['activity'] = acts[(10*page-10):(10*page)]
+        #result['activity'] = acts
     else:
         result['verdict'] = 'error'
         result['message'] = 'Please log in first!'
@@ -259,7 +269,7 @@ def askactivity(username,friendid,num):
     for ac in account:
         if ac['account'] == "":
             continue
-        if ac['platform'] != 0:
+        if ac['platform'] == 2:
             continue
         ans = client.getActivities(ac['account'], plat[int(ac['platform'])], num)
         for act in ans:
