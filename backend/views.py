@@ -278,7 +278,7 @@ def askactivity(username,friendid,num):
             temp['name'] = afriend['name']
             temp['sex'] = afriend['sex']
             temp['avatar'] = '/media/' + str(afriend['avatar'])
-            temp['friendid'] = friendid
+            temp['friendid'] = int(friendid)
             temp['t'] = time.mktime(act['time'])
             temp['G'] = act['time']
             temp['date'] = str(act['time'][0]) + '-' + str(act['time'][1]) + '-' + str(act['time'][2])
@@ -389,12 +389,30 @@ def interests(request,friendid):
         percent = []
         tags = []
         interestnum = 0
+        inttag = 0
+        tmpp = []
         for x in ans:
             if (x['G'][0] > eyear) or ( x['G'][0] == eyear and x['G'][1] > emonth ) or (ans[-1]['G'][0] == eyear and ans[-1]['G'][1] == emonth and ans[-1]['G'][2] > eday): continue
             if (x['G'][0] < byear) or (x['G'][0] == byear and x['G'][1] < bmonth) or (ans[-1]['G'][0] == byear and ans[-1]['G'][1] == bmonth and ans[-1]['G'][2] < bday): break
             for y in x['tags']:
-                if mm.__contains__(y):percent
-
+                if mm.__contains__(y):
+                    percent[int(mm[y])] += 1
+                    tmpp[int(mm[y])][1] += 1
+                else:
+                    mm[y] = interestnum
+                    interestnum += 1
+                    percent.append(1)
+                    tmpp.append([y,1])
+                    tags.append(y)
+                inttag += 1
+        tmpp.sort(key=lambda x: x[1])
+        tmpp.reverse()
+        result['ans'] =tmpp[:10]
+        for x in percent:
+            x = x*1000/inttag
+        result['interestnum'] = interestnum
+        result['tags'] = tags
+        result['percent'] = percent
         #result['days'] = renum
         #result['vitality'] = L
     else:

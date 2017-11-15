@@ -14,8 +14,8 @@ function init_date() {
     for (var i = 1; i <= 12; i++) {
         $("#month").append($("<option></option>").val(i).html(i+"月"));
     }
-    $("#day").append($("<option></option>").val("0").html("分析前一天"));
-    $("#day").append($("<option></option>").val("1").html("分析该月"));
+    $("#day").append($("<option></option>").val("0").html("日活跃度分析"));
+    $("#day").append($("<option></option>").val("1").html("该月分析"));
     $.ajax({
         url: "/friends/",
         type: "GET",
