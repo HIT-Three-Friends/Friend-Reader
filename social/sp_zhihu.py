@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import os,time,datetime
+import os,time,datetime,traceback
 import pickle,logging,re,configparser
 import zhihu_oauth
 from zhihu_oauth import ZhihuClient,ActType
@@ -113,15 +113,14 @@ class zhihuspider(basespider):
 
 				dt=datetime.datetime(*entry['time'][0:6])
 				if dtLatest and dtLatest<dt:continue
-				print(dtOldest>dt)
 				if dtOldest and dtOldest>dt:break
-				print(entry['time'])
 				activityList.append(entry)
 				
 				cnt+=1
 				if cnt>=count:break
 			except Exception as e:
 				logging.error("getActivities of "+backuserid+" failed")
+				traceback.print_exc()
 			
 		return activityList
 	
