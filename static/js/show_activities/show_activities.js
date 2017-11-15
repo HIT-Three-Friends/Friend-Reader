@@ -35,7 +35,7 @@ function loadData(){
     if ($(document).height() - 101 <= totalheight) {  // 说明滚动条已达底部
         current_page++;
         console.log("load more");
-        $(".footer").css("display", "block");
+        $(".footer").fadeIn();
         console.log(location.pathname.replace("/show",""));
         $.ajax({
             url: location.pathname.replace("/show", ""),
@@ -53,7 +53,7 @@ function loadData(){
                     last_activity = activity;
                     add_activity(activity);
                 }
-                $(".footer").css("display", "none");
+                $(".footer").fadeOut();
             }
         });
     }
