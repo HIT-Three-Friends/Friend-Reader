@@ -179,12 +179,21 @@ $(function() {
         if (file == "") {
             alert("请选择文件！");
         } else {
-            $("#hidden-form #avatar").remove();
-            $("#hidden-form").append($("#avatar-modal #avatar").clone());
-            $("#hidden-form").attr("action", "/friends/" + $("#avatar-modal #friendid").val() + "/");
-            console.log($("#hidden-form").attr("action"));
-            $("#hidden-form")[0].submit();
-            location.reload();
+            var iframe = document.getElementById("hidden-frame");
+            var iwindow = iframe.contentWindow;
+            var idoc = iwindow.document;
+            $(idoc.body).empty();
+            $(idoc.body).append($("#hidden-form").clone());
+            var form =  $(idoc.body).find("#hidden-form");
+            form.find("#avatar").remove();
+            form.append($("#avatar-modal #avatar").clone());
+            form.attr("action", "/friends/" + $("#avatar-modal #friendid").val() + "/");
+            console.log(form.attr("action"));
+            $("#hidden-frame").load(function() {
+               location.reload();
+            });
+            form[0].submit();
+            //location.reload();
         }
     });
 });
