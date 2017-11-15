@@ -39,7 +39,7 @@ function render_day(data) {
         data: {
             labels: xz,
             datasets: [{
-                label: "好友",
+                label: "活跃度",
                 backgroundColor: window.chartColors.red,
                 borderColor: window.chartColors.red,
                 data: data,
@@ -93,7 +93,7 @@ function render_month(data) {
         data: {
             labels: xz,
             datasets: [{
-                label: "好友",
+                label: "活跃度",
                 backgroundColor: window.chartColors.red,
                 borderColor: window.chartColors.red,
                 data: data,
