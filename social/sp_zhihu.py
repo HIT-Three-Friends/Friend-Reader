@@ -70,7 +70,7 @@ class zhihuspider(basespider):
 			elif isinstance(target,zhihu_oauth.Question):
 				return (target.title,target.topics,self.url_template_question%(target.id))
 			elif isinstance(target,zhihu_oauth.Article):
-				return (target.excerpt,[],self.url_template_article%(target.id))
+				return (target.content,[],self.url_template_article%(target.id))
 			else:
 				return ("",[],"")
 		
