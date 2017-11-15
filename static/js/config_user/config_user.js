@@ -30,6 +30,7 @@ function add_friend(new_friend, friend) {
     //new_friend.find("#avatar").attr("src", "/media/upload/233.png");
     new_friend.find("#avatar").attr("data-friendid", friend["friendid"]);
     new_friend.find("#name").html(friend["name"]);
+    new_friend.find("#name").attr("href", "/show/activities/"+friend["friendid"]+"/");
     if (friend["sex"] == 0) {
         new_friend.find("#sex").attr("src", "/static/images/male.png");
     } else {
