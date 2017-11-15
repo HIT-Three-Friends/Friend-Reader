@@ -21,7 +21,7 @@ class social(object):
 			知乎	zhihu
 			=======	=========
 		count:获取的动态条数，优先于时间限制
-		timeOldest(None):最老时间(包含)，None默认不限制
+		timeOldest(None):最老时间(包含)，None默认不限制，time就是普通time struct类
 		timeLatest(None):最新时间(包含)，None默认不限制
 		
 		RETURN:dict
@@ -38,6 +38,18 @@ class social(object):
 			'source_url'	原文链接
 			=============	===============
 			建议使用前检查一下key是否存在
+			
+		SAMPLE Useage
+		===============begin====================
+			import social
+			import time
+
+			cli=social.social()
+
+			latest=time.strptime("2017-11-14 12:12:00","%Y-%m-%d %H:%M:%S")
+			oldest=time.strptime("2017-11-10 08:23:00","%Y-%m-%d %H:%M:%S")
+			print(cli.getActivities('kugwzk','weibo',10,oldest,latest))
+		===============end=======================
 		"""
 		return self.allSpider[socialPlatform].getActivities(userid,count,timeOldest,timeLatest)
 		
