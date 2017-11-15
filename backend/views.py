@@ -92,7 +92,7 @@ def myfriends(request):
             else:
                 sex = request.POST['sex']
                 sex = int(sex)
-                avatar = request.FILES.get('avatar','233.png')
+                avatar = '/upload/2345.bmp'
                 #新增计数
                 friendid = int(userinfo[0]) + 1
                 users.objects.filter(username = username).update(friendnum = int(friendid))
@@ -132,14 +132,14 @@ def friend(request,id):
             sex = request.POST.get('sex',-1)
             name = str(name)
             sex = int(sex)
-            avatar = request.FILES.get('avatar', '233.png')
+            avatar = request.FILES.get('avatar', '/upload/2345.bmp')
             idd = int(list(friendinfo.values('id'))[0]['id'])
             if name != 'ljrsb':
                 friendinfo.update(name = name)
             if sex != -1:
                 friendinfo.update(sex = sex)
             # 待修改
-            if str(avatar) != '233.png':
+            if str(avatar) != '/upload/2345.bmp':
                 Picture.objects.filter(user = idd).delete()
                 Picture.objects.create(user=idd,image = avatar)
                 s = list( Picture.objects.filter(user = idd).values('image'))[0]['image']
@@ -208,7 +208,7 @@ def activities(request):
     userinfo = users.objects.filter(username=username)
     client = socialpc()
     page = int(request.GET['page'])
-    if page > 10 :
+    if page > 4 :
         result['activitynum'] = 0
         result['activity'] = []
         return JsonResponse(result)
@@ -226,7 +226,7 @@ def activities(request):
                     continue
                 if ac['platform'] == 2:
                     continue
-                ans = client.getActivities(ac['account'],plat[int(ac['platform'])],page*4)
+                ans = client.getActivities(ac['account'],plat[int(ac['platform'])],page*10)
                 #ans = client.getActivities(ac['account'],plat[int(ac['platform'])],10)
                 for act in ans:
                     cnt += 1
