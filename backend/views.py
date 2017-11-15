@@ -92,7 +92,7 @@ def myfriends(request):
             else:
                 sex = request.POST['sex']
                 sex = int(sex)
-                avatar = '/upload/2345.bmp'
+                avatar = 'upload/2345.bmp'
                 #新增计数
                 friendid = int(userinfo[0]) + 1
                 users.objects.filter(username = username).update(friendnum = int(friendid))
@@ -132,14 +132,14 @@ def friend(request,id):
             sex = request.POST.get('sex',-1)
             name = str(name)
             sex = int(sex)
-            avatar = request.FILES.get('avatar', '/upload/2345.bmp')
+            avatar = request.FILES.get('avatar', 'upload/2345.bmp')
             idd = int(list(friendinfo.values('id'))[0]['id'])
             if name != 'ljrsb':
                 friendinfo.update(name = name)
             if sex != -1:
                 friendinfo.update(sex = sex)
             # 待修改
-            if str(avatar) != '/upload/2345.bmp':
+            if str(avatar) != 'upload/2345.bmp':
                 Picture.objects.filter(user = idd).delete()
                 Picture.objects.create(user=idd,image = avatar)
                 s = list( Picture.objects.filter(user = idd).values('image'))[0]['image']
@@ -233,7 +233,7 @@ def activities(request):
                     temp = {}
                     temp['name'] = afriend['name']
                     temp['sex'] = afriend['sex']
-                    temp['avatar'] = afriend['avatar']
+                    temp['avatar'] ='/media/' + str(afriend['avatar'])
                     temp['t'] = time.mktime(act['time'])
                     temp['date'] = str(act['time'][0])+'-'+str(act['time'][1]) +'-'+str(act['time'][2])
                     temp['time'] = str(act['time'][3])+':'+str(act['time'][4]) +':'+str(act['time'][5])
@@ -276,7 +276,7 @@ def askactivity(username,friendid,num):
             temp = {}
             temp['name'] = afriend['name']
             temp['sex'] = afriend['sex']
-            temp['avatar'] = afriend['avatar']
+            temp['avatar'] = '/media/' + str(afriend['avatar'])
             temp['t'] = time.mktime(act['time'])
             temp['G'] = act['time']
             temp['date'] = str(act['time'][0]) + '-' + str(act['time'][1]) + '-' + str(act['time'][2])
