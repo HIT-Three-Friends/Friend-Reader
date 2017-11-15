@@ -215,7 +215,7 @@ def activities(request):
     acts = []
     cnt = 0
     if userinfo:
-        id = friends.objects.filter(user = username).values('id','name','sex','avatar')
+        id = friends.objects.filter(user = username).values('id','name','sex','avatar','friendid')
         id = list(id)
         for afriend in id:
             account = social.objects.filter(father = afriend['id']).values('platform', 'account')
@@ -233,6 +233,7 @@ def activities(request):
                     temp = {}
                     temp['name'] = afriend['name']
                     temp['sex'] = afriend['sex']
+                    temp['friendid'] = int(afriend['friendid'])
                     temp['avatar'] ='/media/' + str(afriend['avatar'])
                     temp['t'] = time.mktime(act['time'])
                     temp['date'] = str(act['time'][0])+'-'+str(act['time'][1]) +'-'+str(act['time'][2])
@@ -277,6 +278,7 @@ def askactivity(username,friendid,num):
             temp['name'] = afriend['name']
             temp['sex'] = afriend['sex']
             temp['avatar'] = '/media/' + str(afriend['avatar'])
+            temp['friendid'] = friendid
             temp['t'] = time.mktime(act['time'])
             temp['G'] = act['time']
             temp['date'] = str(act['time'][0]) + '-' + str(act['time'][1]) + '-' + str(act['time'][2])
@@ -299,10 +301,15 @@ def activity(request,friendid):
     result = {'verdict': 'success', 'message': 'Successful'}
     username = request.session.get('username', '')
     userinfo = users.objects.filter(username=username)
+    page = int(request.GET['page'])
+    if page > 4:
+        result['activitynum'] = 0
+        result['activity'] = []
+        return JsonResponse(result)
     if userinfo:
-        ans = askactivity(username,friendid,20)
-        result['activitynum'] = len(ans)
-        result['activity'] = ans
+        ans = askactivity(username,friendid,10*page)
+        result['activitynum'] = 10
+        result['activity'] = ans[(10*page-10):(10*page)]
     else:
         result['verdict'] = 'error'
         result['message'] = 'Please log in first!'
