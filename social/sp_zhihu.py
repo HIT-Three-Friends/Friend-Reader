@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import os,time
+import os,time,datetime
 import pickle,logging,re,configparser
 import zhihu_oauth
 from zhihu_oauth import ZhihuClient,ActType
@@ -55,7 +55,7 @@ class zhihuspider(basespider):
 		for peo in me.followings: self.name_map[peo.name]=peo.id
 		with open(self.friends_file,"wb") as f: pickle.dump(self.name_map,f)
 
-	def getActivities(self,userid,count=20):
+	def getActivities(self,userid,count=10,timeOldest=None,timeLatest=None):
 		"""
 		关于actionType
 			CREATE_ANSWER
@@ -74,6 +74,11 @@ class zhihuspider(basespider):
 			else:
 				return ("",[],"")
 		
+		if isinstance(userid,int):userid=str(userid)
+		backuserid=userid
+		dtLatest=datetime.datetime(*timeLatest[0:6]) if timeLatest else None
+		dtOldest=datetime.datetime(*timeOldest[0:6]) if timeOldest else None
+		
 		pp=self.client.people(userid)
 		if pp.over:
 			if userid not in self.name_map:
@@ -88,27 +93,35 @@ class zhihuspider(basespider):
 		
 		cnt=0
 		for act in pp.activities:
-			targetInfo=getTargetText_Topic(act.target,act.type)
-			entry={
-				'username':pp.name,
-				'avatar_url':pp.avatar_url,
-				'headline':pp.headline,
-				'time':time.localtime(act.created_time),
-				'actionType':act.type,
-				'summary':act2str(act),
-				'targetText':targetInfo[0],
-				'topics':list(map(lambda topic:topic.name,targetInfo[1])),
-				'source_url':targetInfo[2]
-			}
-			#print(entry['source_url'])
-			imglist=re.findall(r'(?<=<img src=")(.*?)(?=")',entry['targetText'])
-			if isinstance(act.target,zhihu_oauth.Article) and act.target.image_url:imglist[0:0]=[act.target.image_url]
-			if imglist: entry['imgs']=imglist
+			try:
+				targetInfo=getTargetText_Topic(act.target,act.type)
+				entry={
+					'username':pp.name,
+					'avatar_url':pp.avatar_url,
+					'headline':pp.headline,
+					'time':time.localtime(act.created_time),
+					'actionType':act.type,
+					'summary':act2str(act),
+					'targetText':targetInfo[0],
+					'topics':list(map(lambda topic:topic.name,targetInfo[1])),
+					'source_url':targetInfo[2]
+				}
+				
+				imglist=re.findall(r'(?<=<img src=")(.*?)(?=")',entry['targetText'])
+				if isinstance(act.target,zhihu_oauth.Article) and act.target.image_url:imglist[0:0]=[act.target.image_url]
+				if imglist: entry['imgs']=imglist
 
-			activityList.append(entry)
-			
-			cnt+=1
-			if cnt>=count:break
+				dt=datetime.datetime(*entry['time'][0:6])
+				if dtLatest and dtLatest<dt:continue
+				print(dtOldest>dt)
+				if dtOldest and dtOldest>dt:break
+				print(entry['time'])
+				activityList.append(entry)
+				
+				cnt+=1
+				if cnt>=count:break
+			except Exception as e:
+				logging.error("getActivities of "+backuserid+" failed")
 			
 		return activityList
 	

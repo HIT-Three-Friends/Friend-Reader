@@ -84,7 +84,7 @@ class weibospider(basespider):
 			self.name_map[peo[0]]=peo[1]
 		with open(self.friends_file,"wb") as f: pickle.dump(self.name_map,f)
 
-	def getActivities(self,userid,count=20):
+	def getActivities(self,userid,count=10,timeOldest=None,timeLatest=None):
 		def transtime(timstr):
 			lct=time.localtime()
 			try:
@@ -129,11 +129,16 @@ class weibospider(basespider):
 		
 		if isinstance(userid,int):userid=str(userid)
 		backuserid=userid
+		dtLatest=datetime.datetime(*timeLatest[0:6]) if timeLatest else None
+		dtOldest=datetime.datetime(*timeOldest[0:6]) if timeOldest else None
+		
+		
 		pp=People(userid,self.session)
 		if not pp.info:
 			if userid not in self.name_map:
-				try: self.followings2name_map(self.me)
-				except Exception as e: logging.error("followings2name_map failed "+str(e))
+				pass
+				# try: self.followings2name_map(self.me)
+				# except Exception as e: logging.error("followings2name_map failed "+str(e))
 			if userid in self.name_map:
 				userid=self.name_map[userid]
 				pp=People(userid,self.session)
@@ -167,7 +172,10 @@ class weibospider(basespider):
 					'source_url':"https://weibo.com/"+("u/" if re.fullmatch(r'\d+',pp.id) else "")+pp.id+"?is_all=1"
 				}
 				if 'ImageUrls' in act: entry['imgs']=act['ImageUrls']
-
+				
+				dt=datetime.datetime(*entry['time'][0:6])
+				if dtLatest and dtLatest<dt:continue
+				if dtOldest and dtOldest>dt:break
 				activityList.append(entry)
 				cnt+=1
 				if cnt>=count:break
@@ -181,7 +189,10 @@ class weibospider(basespider):
 		params={'screen_name':screen_name,'access_token':self.spConfig['access_token']}
 		r=requests.get(url,params=params)
 		if r.status_code!=200: return None
-		else: return str(r.json()['id'])
+		else: 
+			self.name_map[screen_name]=str(r.json()['id'])
+			with open(self.friends_file,"wb") as f: pickle.dump(self.name_map,f)
+			return str(r.json()['id'])
 
 class People(object):
 	def __init__(self,id=None,session=None):

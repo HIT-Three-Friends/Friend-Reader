@@ -11,7 +11,7 @@ class social(object):
 			'weibo':weibospider()
 		}
 	
-	def getActivities(self,userid,socialPlatform,count):
+	def getActivities(self,userid,socialPlatform,count,timeOldest=None,timeLatest=None):
 		"""
 		userid:用户唯一标识符
 		socialPlatform:平台名称
@@ -20,7 +20,9 @@ class social(object):
 			=======	=========
 			知乎	zhihu
 			=======	=========
-		count:获取的动态条数
+		count:获取的动态条数，优先于时间限制
+		timeOldest(None):最老时间(包含)，None默认不限制
+		timeLatest(None):最新时间(包含)，None默认不限制
 		
 		RETURN:dict
 			=============	===============
@@ -37,7 +39,7 @@ class social(object):
 			=============	===============
 			建议使用前检查一下key是否存在
 		"""
-		return self.allSpider[socialPlatform].getActivities(userid,count)
+		return self.allSpider[socialPlatform].getActivities(userid,count,timeOldest,timeLatest)
 		
 if __name__=="__main__":
 	testsocial=social()
