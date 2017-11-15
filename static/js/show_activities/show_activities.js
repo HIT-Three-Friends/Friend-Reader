@@ -8,6 +8,7 @@ function add_activity(activity){
     new_activity.find("#event-time").html(activity["time"]);
     new_activity.find("#title").html(activity["title"]);
     new_activity.find("#name").html(activity["name"]);
+    //new_activity.find("#name").attr("href", "/show/activities/"+activity["friendid"]+"/");
     new_activity.find("#url").attr("href", activity["url"]);
     new_activity.find("#word").html(activity["word"]);
     new_activity.find("#word").click(function(e) {
@@ -35,8 +36,9 @@ function loadData(){
         current_page++;
         console.log("load more");
         $(".footer").css("display", "block");
+        console.log(location.pathname.replace("/show",""));
         $.ajax({
-            url: "/activities/",
+            url: location.pathname.replace("/show", ""),
             type: "GET",
             data: {
                 "page": current_page

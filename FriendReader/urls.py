@@ -32,7 +32,7 @@ urlpatterns = [
 
     url(r'^login/$', frontend.views.login),
     url(r'^register/$', frontend.views.register),
-    url(r'^show/activities/$', frontend.views.show_activities),
+    url(r'^show/activities/', frontend.views.show_activities),
     url(r'^show/vitalities/$', frontend.views.show_vitalities),
     url(r'^show/interests/$', frontend.views.show_interests),
     url(r'^config/user/', frontend.views.config_user),
