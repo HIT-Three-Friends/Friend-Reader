@@ -22,4 +22,4 @@ class basespider(object):
 			
 		
 	def prepare(self):
-		logging.basicConfig(format='%(asctime)s --%(lineno)s -- %(levelname)s:%(message)s', level=logging.INFO)
+		logging.basicConfig(format='%(asctime)s --%(lineno)s -- %(levelname)s:%(message)s', level=logging.DEBUG)
