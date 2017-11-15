@@ -47,7 +47,9 @@ class zhihuspider(basespider):
 		
 		self.me=self.client.me()
 		if self.me.over:
-			logging.error("you are baned! Reason is "+self.me.over_reason)
+			logging.error("login failed! Reason is "+self.me.over_reason)
+			self.client.login_in_terminal()
+			self.client.save_token(self.TOKEN_FILE)	
 		
 	def followings2name_map(self,me):
 		for peo in me.followings: self.name_map[peo.name]=peo.id

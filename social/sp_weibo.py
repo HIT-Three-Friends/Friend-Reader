@@ -8,6 +8,7 @@ import requests
 from .sp_base import basespider
 from .items import TweetsItem, InformationItem
 from .weibo_parser import *
+from .cookies import getCookie
 
 class weibospider(basespider):
 	def __init__(self):
@@ -23,7 +24,7 @@ class weibospider(basespider):
 		except Exception as e: logging("load spConfig fail")
 		
 		self.data_path=self.socialRoot+self.config['data_path']
-		self.TOKEN_FILE=self.data_path+self.config['TOKEN_FILE']
+		self.COOKIE_FILE=self.data_path+self.config['COOKIE_FILE']
 		self.friends_file=self.data_path+self.config['friends_file']
 		
 		#self.url_template_question="https://www.zhihu.com/question/%s"
@@ -43,9 +44,41 @@ class weibospider(basespider):
 		headers=eval(self.spConfig['headers'])
 		self.session=requests.session()
 		self.session.headers=headers
-		
+		"""
+		if os.path.isfile(self.COOKIE_FILE):
+			self.session.cookies=pickle.load(open(self.COOKIE_FILE,"rb"))
+		else:
+			new_cookies=getCookie(self.spConfig['username'],self.spConfig['password'])
+			if new_cookies:
+				self.session.cookies=new_cookies
+				pickle.dump(new_cookies,open(self.COOKIE_FILE,"wb"))
+			else:
+				logging.error("get new cookies failed, login failed")
+		"""
 		self.me=People("2218968230",self.session)
-
+		if not self.me.info:
+			logging.error("weibo login failed")
+		#self.CheckUpdateCookies(self.session)
+	
+	def CheckUpdateCookies(self,session):
+		me=People("2218968230",session)
+		if me.info: return True
+		time.sleep(2)
+		new_cookies=getCookie(self.spConfig['username'],self.spConfig['password'])
+		if new_cookies:
+			session.cookies=new_cookies
+			me=People("2218968230",session)
+			if me.info:
+				logging.info("update new cookies sussess")
+				return True
+			else:
+				logging.error("update new cookies sussess failed")
+				return False
+		else:
+			logging.error("update new cookies sussess failed")
+			return False
+		
+	
 	def followings2name_map(self,me):
 		for peo in me.followings: 
 			self.name_map[peo[0]]=peo[1]
@@ -110,6 +143,12 @@ class weibospider(basespider):
 				if not pp.info:
 					logging.error("Can't find user "+backuserid+" or login failed")
 					return []
+					# logging.error("Can't find user "+backuserid+" or login failed, trying to get new cookies")
+					# self.CheckUpdateCookies(self.session)
+					# pp=People(userid,self.session)
+					# if not pp.info:
+						# logging.error("get new cookies failed")
+						# return []
 		
 		activityList=[]
 		
