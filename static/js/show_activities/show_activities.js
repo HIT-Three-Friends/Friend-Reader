@@ -1,6 +1,6 @@
 var last_activity = null;
 var current_page = 0;
-var reading = null;
+var loading = false;
 function add_activity(activity){
     var new_activity = $("#event-template").clone();
     new_activity.css("display", "block");
@@ -12,10 +12,20 @@ function add_activity(activity){
     new_activity.find("#url").attr("href", activity["url"]);
     new_activity.find("#word").html(activity["word"]);
     new_activity.find("#word").click(function(e) {
-        console.log("test");
         new_activity.find("#word").css("max-height", "");
+        new_activity.find("#word").css("cursor", "");
+        new_activity.find("#word").css("color", "");
         $(document).one("click", function () {
             new_activity.find("#word").css("max-height", "200px");
+            new_activity.find("#word").css("cursor", "pointer");
+        });
+        e.stopPropagation();
+    });
+    new_activity.find("#word").mouseover(function(e) {
+        if ($(this).css("max-height") == "200px")
+            new_activity.find("#word").css("color", "#989ba2");
+        $(document).one("mouseover", function () {
+            new_activity.find("#word").css("color", "");
         });
         e.stopPropagation();
     });
@@ -32,7 +42,9 @@ function loadData(){
     console.log("load");
     console.log($(document).height());
     console.log(totalheight);
-    if ($(document).height() - 101 <= totalheight) {  // 说明滚动条已达底部
+    if ($(document).height() - 101 <= totalheight && loading == false) {  // 说明滚动条已达底部
+        console.log("loading="+loading);
+        loading = true;
         current_page++;
         console.log("load more");
         $(".footer").fadeIn();
@@ -54,6 +66,7 @@ function loadData(){
                     add_activity(activity);
                 }
                 $(".footer").fadeOut();
+                loading = false;
             }
         });
     }
