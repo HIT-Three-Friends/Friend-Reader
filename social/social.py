@@ -3,12 +3,14 @@
 
 from .sp_zhihu import zhihuspider
 from .sp_weibo import weibospider
+from .sp_github import githubspider
 
 class social(object):
 	def __init__(self):
 		self.allSpider={
 			'zhihu':zhihuspider(),
-			'weibo':weibospider()
+			'weibo':weibospider(),
+			'github':githubspider()
 		}
 	
 	def getActivities(self,userid,socialPlatform,count,timeOldest=None,timeLatest=None):

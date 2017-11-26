@@ -68,7 +68,6 @@ class zhihuspider(basespider):
 			if isinstance(target,zhihu_oauth.Answer):
 				return (target.content,target.question.topics,self.url_template_answer%(target.question.id,target.id))
 			elif isinstance(target,zhihu_oauth.Question):
-				print(target.detail)
 				return (target.detail,target.topics,self.url_template_question%(target.id))
 			elif isinstance(target,zhihu_oauth.Article):
 				return (target.content,[],self.url_template_article%(target.id))
