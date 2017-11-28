@@ -37,6 +37,7 @@ urlpatterns = [
     url(r'^show/interests/$', frontend.views.show_interests),
     url(r'^config/user/', frontend.views.config_user),
     url(r'^config/friends/$', frontend.views.config_friends),
+    url(r'^show/changes/$', frontend.views.show_changes),
 
     url(r'^activities/$',backend_views.activities,name = 'act'),
     url(r'^activities/(\d+)/$',backend_views.activity,name = 'act21'),
