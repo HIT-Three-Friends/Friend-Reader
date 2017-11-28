@@ -15,7 +15,7 @@
 """
 
 import os
-import time,datetime,traceback
+import time,datetime,traceback,copy
 import pickle,logging,re,configparser,json
 import requests
 from .sp_base import basespider
@@ -66,45 +66,28 @@ class githubspider(basespider):
 
 	def getActivities(self,userid,count=10,timeOldest=None,timeLatest=None):
 		def formsummary(pp,act):
-			if 'Content' not in act:act['Content']=""
-			if 'OriginContent' not in act:act['OriginContent']=""
-			if 'TransFrom' not in act:act['TransFrom']=""
-			
-			if act['ActType']=="origin":
-				return "%s 发表了微博 %s"%(pp.info['NickName'],act['Content'] if len(act['Content'])<30 else act['Content'][:27]+"...")
-			elif act['ActType']=="trans":
-				return "%s 转发了 %s 的微博 %s"%(pp.info['NickName'],act['TransFrom'],act['OriginContent'] if len(act['OriginContent'])<30 else act['OriginContent'][:27]+"...")
+			if act['type']=='starredRepos':
+				return "%s starred %s"%(pp.info['login'],act['name'])
+			elif act['type']=='createdRepos':
+				return "%s created a repository %s"%(pp.info['login'],act['name'])
+			elif act['type']=='commits':
+				return "%s committed to master in %s"%(pp.info['login'],act['repository'])
 			else:
 				return ""
-		
+			
+		def transtime(dt):
+			return time.strptime(dt, "%Y-%m-%dT%H:%M:%SZ")
+			
 		if isinstance(userid,int):userid=str(userid)
 		backuserid=userid
 		dtLatest=datetime.datetime(*timeLatest[0:6]) if timeLatest else None
 		dtOldest=datetime.datetime(*timeOldest[0:6]) if timeOldest else None
 		
-		
 		pp=People(userid,self.session)
-		for pn in pp.starredRepos:print(pn)
+
 		if not pp.info:
-			if userid not in self.name_map:
-				pass
-				# try: self.followings2name_map(self.me)
-				# except Exception as e: logging.error("followings2name_map failed "+str(e))
-			if userid in self.name_map:
-				userid=self.name_map[userid]
-				pp=People(userid,self.session)
-			if not pp.info:
-				userid=self.screen_name2userid(userid)
-				pp=People(userid,self.session)
-				if not pp.info:
-					logging.error("Can't find user "+backuserid+" or login failed")
-					return []
-					# logging.error("Can't find user "+backuserid+" or login failed, trying to get new cookies")
-					# self.CheckUpdateCookies(self.session)
-					# pp=People(userid,self.session)
-					# if not pp.info:
-						# logging.error("get new cookies failed")
-						# return []
+			logging.error("cant get user info")
+			return []
 		
 		activityList=[]
 		
@@ -112,17 +95,16 @@ class githubspider(basespider):
 		for act in pp.activities:
 			try:
 				entry={
-					'username':pp.info['NickName'] if 'NickName' in pp.info else "",
-					'avatar_url':pp.info['Avatar_url'] if 'Avatar_url' in pp.info else "",
-					'headline':pp.info['BriefIntroduction'] if 'BriefIntroduction' in pp.info else "",
-					'time':transtime(act['PubTime'] if 'PubTime' in act else ""),
-					'actionType':act['ActType'] if 'ActType' in act else "",
+					'username':pp.info['name'] if pp.info['name'] else userid,
+					'avatar_url':pp.info['avatarUrl'] if pp.info['avatarUrl'] else "",
+					'headline':pp.info['bioHTML'],
+					'time':transtime(act['date']),
+					'actionType':act['type'],
 					'summary':formsummary(pp,act),
-					'targetText':act['Content'] if 'Content' in act else "",
+					'targetText':act['message'] if 'message' in act else "",
 					'topics':[],
-					'source_url':"https://weibo.com/"+("u/" if re.fullmatch(r'\d+',pp.id) else "")+pp.id+"?is_all=1"
+					'source_url':act['URL']
 				}
-				if 'ImageUrls' in act: entry['imgs']=act['ImageUrls']
 				
 				dt=datetime.datetime(*entry['time'][0:6])
 				if dtLatest and dtLatest<dt:continue
@@ -132,6 +114,7 @@ class githubspider(basespider):
 				if cnt>=count:break
 			except Exception as e:
 				logging.error("getActivities of "+backuserid+" failed")
+				traceback.print_exc()
 			
 		return activityList
 	
@@ -172,19 +155,43 @@ class People(object):
 				logging.error(self.id+" : "+result['errors'])
 				return None
 			result=result['data']['user']
-			print(result)
 			self._Info=result
 			return self._Info
 		else: return None
 	
 	@property
 	def activities(self):
+		
+		def moveToNextAction(entry):
+			try:entry['nextAction']=next(entry['gen'])
+			except StopIteration as e:
+				logging.info('Action exhausted')
+				entry['nextAction']={'date':'0'}
+		
 		if not self.id or not self.session: return None
+		actions={'starredRepos','createdRepos','commits'}
 		
-		r=self.session.get(self.url_activity)
-		if r.status_code==200: return parse_tweets(r,self.session)
-		else: return None
+		dl={}
+		for action in actions:
+			gen=getattr(self,action)
+			dl[action]={'gen':gen,'nextAction':{'date':'0'}}
+			moveToNextAction(dl[action])
 		
+		failtimes=0
+		while failtimes<3:
+			try:
+				latestAction=max(dl.items(),key=lambda x:x[1]['nextAction']['date'])
+				ActionName,action=latestAction
+				if action['nextAction']['date']=='0':raise StopIteration
+				actionEntry=copy.deepcopy(action['nextAction'])
+				moveToNextAction(action)
+				actionEntry['type']=ActionName
+				yield actionEntry
+			except Exception as e:
+				logging.error("get action failed")
+				traceback.print_exc()
+				failtimes+=1
+			
 	@property
 	def starredRepos(self):
 		if not self.id or not self.session: return None
@@ -197,10 +204,10 @@ class People(object):
 				}
 		}
 		r=self.session.post(self.url_graphql,data=json.dumps(data))
+		result=r.json()
 		failtimes=0
 		while failtimes<3:
-			if r.status_code==200:
-				result=r.json()
+			if r.status_code==200 and "errors" not in result:			
 				result=result['data']
 				for pp in result['user']['starredRepositories']['edges']:	
 					last_cursor=pp['cursor']
@@ -216,9 +223,10 @@ class People(object):
 				}
 				r=self.session.post(self.url_graphql,data=json.dumps(data))
 			else:
+				failtimes+=1
 				if "errors" in result:
 					logging.error(self.id+" : "+result['errors'])
-					failtimes+=1
+					
 
 	@property
 	def createdRepos(self):
@@ -232,10 +240,10 @@ class People(object):
 				}
 		}
 		r=self.session.post(self.url_graphql,data=json.dumps(data))
+		result=r.json()
 		failtimes=0
 		while failtimes<3:
-			if r.status_code==200:
-				result=r.json()
+			if r.status_code==200 and "errors" not in result:
 				result=result['data']
 				for pp in result['user']['repositories']['edges']:	
 					last_cursor=pp['cursor']
@@ -251,9 +259,10 @@ class People(object):
 				}
 				r=self.session.post(self.url_graphql,data=json.dumps(data))
 			else:
+				failtimes+=1
 				if "errors" in result:
 					logging.error(self.id+" : "+result['errors'])
-					failtimes+=1					
+										
 
 	@property
 	def pushedRepos(self):
@@ -267,14 +276,14 @@ class People(object):
 				}
 		}
 		r=self.session.post(self.url_graphql,data=json.dumps(data))
+		result=r.json()
 		failtimes=0
 		while failtimes<3:
-			if r.status_code==200:
-				result=r.json()
+			if r.status_code==200 and "errors" not in result:			
 				result=result['data']
 				for pp in result['user']['repositories']['edges']:	
 					last_cursor=pp['cursor']
-					yield {'name':pp['node']['name'],'owner':pp['node']['owner']['login'],'date':pp['pushedAt']}
+					yield {'name':pp['node']['name'],'owner':pp['node']['owner']['login'],'date':pp['node']['pushedAt']}
 				if not result['user']['repositories']['pageInfo']['hasNextPage']:raise StopIteration
 				data={
 					"query":self.QUERY_PUSHEDREPOS2,
@@ -286,14 +295,13 @@ class People(object):
 				}
 				r=self.session.post(self.url_graphql,data=json.dumps(data))
 			else:
+				failtimes+=1	
 				if "errors" in result:
 					logging.error(self.id+" : "+result['errors'])
-					failtimes+=1					
+									
 
-	@property
 	def repoCommits(self,name,owner):
 		if not self.id or not self.session: return None
-		
 		data={
 			"query":self.QUERY_COMMITS1,
 			"variables":
@@ -304,14 +312,14 @@ class People(object):
 				}
 		}
 		r=self.session.post(self.url_graphql,data=json.dumps(data))
+		result=r.json()
 		failtimes=0
 		while failtimes<3:
-			if r.status_code==200:
-				result=r.json()
+			if r.status_code==200 and "errors" not in result:	
 				result=result['data']
 				for pp in result['repository']['ref']['target']['history']['edges']:	
 					last_cursor=pp['cursor']
-					yield {'messageHeadline':pp['node']['messageHeadline'],'message':pp['node']['message'],'date':pp['node']['committedDate'],'URL':pp['node']['commitUrl']}
+					yield {'repository':name,'messageHeadline':pp['node']['messageHeadline'],'message':pp['node']['message'],'date':pp['node']['committedDate'],'URL':pp['node']['commitUrl']}
 				if not result['repository']['ref']['target']['history']['pageInfo']['hasNextPage']:raise StopIteration
 				data={
 					"query":self.QUERY_COMMITS2,
@@ -325,39 +333,55 @@ class People(object):
 				}
 				r=self.session.post(self.url_graphql,data=json.dumps(data))
 			else:
+				failtimes+=1
 				if "errors" in result:
-					logging.error(self.id+" : "+result['errors'])
-					failtimes+=1
+					logging.error(self.id+" : "+str(result['errors']))
+					
 					
 	@property
-	def Commits(self):
-		def addRepos(lis,count):
-			for repo in self.pushedRepos:
-				lis.append({'commits':self.repoCommits(repo['name'],repo['owner']),'date':repo['date'],'visited':False})
+	def commits(self):
+		def addRepos(lis,count,pushedReposLis):
+			while count>0:
+				try:repo=next(pushedReposLis)
+				except StopIteration as e:logging.info("pushedRepos exhausted");raise StopIteration
+				repocommits=self.repoCommits(repo['name'],repo['owner'])
+				try:nextcommit=next(repocommits)
+				except StopIteration as e:nextcommit={'date':'0'}
+				except Exception as e:logging.error("get next commit fail "+repo['name'])
+				lis.append({'commits':repocommits,'nextcommit':nextcommit,'date':nextcommit['date'],'visited':False})
 				count-=1
-				if count<=0: break			
-	
+						
+		def existunvis(lis):
+			for repo in lis:
+				if not repo['visited']:return True
+			return False
+			
 		if not self.id or not self.session: return None
 		
-		
+		pushedReposLis=self.pushedRepos
 		lis=[]
-		addRepos(lis,5)
+		reponum=3
+		try:addRepos(lis,reponum,pushedReposLis)
+		except StopIteration as e:pass
 		failtimes=0
-		unvisted
 		while failtimes<3:
-			if not existunvis(lis):addRepos(lis,5)
-			latestRepo=max(lis,lambda x:x['date'])
 			try:
-				commit=next(latestRepo['commits'])
+				if not existunvis(lis):
+					try:addRepos(lis,reponum,pushedReposLis)
+					except StopIteration as e:pass
+				latestRepo=max(lis,key=lambda x:x['date'])
+				if latestRepo['date']=="0":raise StopIteration
+				
+				commit=latestRepo['nextcommit']
+				try:latestRepo['nextcommit']=next(latestRepo['commits'])
+				except StopIteration as e:latestRepo['nextcommit']['date']='0'
 				latestRepo['visited']=True
-				latestRepo['date']=commit['date']
+				latestRepo['date']=latestRepo['nextcommit']['date']
 				yield commit
-			except StopIteration as e:
-				latestRepo['date']='0'
-				continue
 			except Exception as e:
-				logging.error(self.id+" : "+"getCommit fail")
 				failtimes+=1
+				logging.error("get next commits fail")
+				traceback.print_exc()
 
 					
 	@property
@@ -372,10 +396,10 @@ class People(object):
 				}
 		}
 		r=self.session.post(self.url_graphql,data=json.dumps(data))
+		result=r.json()
 		failtimes=0
 		while failtimes<3:
-			if r.status_code==200:
-				result=r.json()
+			if r.status_code==200 and "errors" not in result:
 				result=result['data']
 				for pp in result['user']['following']['edges']:	
 					last_cursor=pp['cursor']
@@ -391,9 +415,10 @@ class People(object):
 				}
 				r=self.session.post(self.url_graphql,data=json.dumps(data))
 			else:
+				failtimes+=1
 				if "errors" in result:
 					logging.error(self.id+" : "+result['errors'])
-					failtimes+=1			
+								
 				
 				
 
@@ -409,10 +434,10 @@ class People(object):
 				}
 		}
 		r=self.session.post(self.url_graphql,data=json.dumps(data))
+		result=r.json()
 		failtimes=0
 		while failtimes<3:
-			if r.status_code==200:
-				result=r.json()
+			if r.status_code==200 and "errors" not in result:	
 				result=result['data']
 				for pp in result['user']['followers']['edges']:	
 					last_cursor=pp['cursor']
@@ -428,14 +453,16 @@ class People(object):
 				}
 				r=self.session.post(self.url_graphql,data=json.dumps(data))
 			else:
+				failtimes+=1	
 				if "errors" in result:
 					logging.error(self.id+" : "+result['errors'])
-					failtimes+=1		
+						
 	
 	QUERY_USER_INFO="""	
 	query($login_name:String!){
 	  user(login:$login_name){
 		id
+		login
 		name
 		avatarUrl
 		bioHTML
@@ -640,7 +667,7 @@ class People(object):
 	"""
 	
 	QUERY_COMMITS1="""
-	query($repo_name:String!,$repo_owner:String!,$author_id:String!){
+	query($repo_name:String!,$repo_owner:String!,$author_id:ID!){
 	  repository(name: $repo_name,owner:$repo_owner) {
 		ref(qualifiedName: "master") {
 		  target {
@@ -673,7 +700,7 @@ class People(object):
 	"""
 	
 	QUERY_COMMITS2="""
-	query($repo_name:String!,$repo_owner:String!,$author_id:String!,$last_cursor:String!){
+	query($repo_name:String!,$repo_owner:String!,$author_id:ID!,$last_cursor:String!){
 	  repository(name: $repo_name,owner:$repo_owner) {
 		ref(qualifiedName: "master") {
 		  target {
