@@ -272,7 +272,8 @@ class People(object):
 			"query":self.QUERY_PUSHEDREPOS1,
 			"variables":
 				{
-					"login_name":self.id
+					"login_name":self.id,
+					"author_id":self.info['id']
 				}
 		}
 		r=self.session.post(self.url_graphql,data=json.dumps(data))
@@ -283,13 +284,14 @@ class People(object):
 				result=result['data']
 				for pp in result['user']['repositories']['edges']:	
 					last_cursor=pp['cursor']
-					yield {'name':pp['node']['name'],'owner':pp['node']['owner']['login'],'date':pp['node']['pushedAt']}
+					yield {'name':pp['node']['name'],'owner':pp['node']['owner']['login'],'date':pp['node']['pushedAt'],'precommits':{'data':{'repository':pp['node']}}}
 				if not result['user']['repositories']['pageInfo']['hasNextPage']:raise StopIteration
 				data={
 					"query":self.QUERY_PUSHEDREPOS2,
 					"variables":
 						{
 							"login_name":self.id,
+							"author_id":self.info['id'],
 							"last_cursor":last_cursor
 						}
 				}
@@ -297,25 +299,31 @@ class People(object):
 			else:
 				failtimes+=1	
 				if "errors" in result:
-					logging.error(self.id+" : "+result['errors'])
+					logging.error(self.id+" : "+str(result['errors']))
 									
 
-	def repoCommits(self,name,owner):
+	def repoCommits(self,name,owner,precommits=None):
 		if not self.id or not self.session: return None
-		data={
-			"query":self.QUERY_COMMITS1,
-			"variables":
-				{
-					"repo_name":name,
-					"repo_owner":owner,
-					"author_id":self.info['id']
-				}
-		}
-		r=self.session.post(self.url_graphql,data=json.dumps(data))
-		result=r.json()
+		
+		if precommits:
+			result=precommits
+			r=None
+		else:
+			data={
+				"query":self.QUERY_COMMITS1,
+				"variables":
+					{
+						"repo_name":name,
+						"repo_owner":owner,
+						"author_id":self.info['id']
+					}
+			}
+			r=self.session.post(self.url_graphql,data=json.dumps(data))
+			result=r.json()
+
 		failtimes=0
 		while failtimes<3:
-			if r.status_code==200 and "errors" not in result:	
+			if (not r or r.status_code==200) and "errors" not in result:
 				result=result['data']
 				for pp in result['repository']['ref']['target']['history']['edges']:	
 					last_cursor=pp['cursor']
@@ -344,7 +352,7 @@ class People(object):
 			while count>0:
 				try:repo=next(pushedReposLis)
 				except StopIteration as e:logging.info("pushedRepos exhausted");raise StopIteration
-				repocommits=self.repoCommits(repo['name'],repo['owner'])
+				repocommits=self.repoCommits(repo['name'],repo['owner'],repo['precommits'])
 				try:nextcommit=next(repocommits)
 				except StopIteration as e:nextcommit={'date':'0'}
 				except Exception as e:logging.error("get next commit fail "+repo['name'])
@@ -360,7 +368,7 @@ class People(object):
 		
 		pushedReposLis=self.pushedRepos
 		lis=[]
-		reponum=3
+		reponum=10
 		try:addRepos(lis,reponum,pushedReposLis)
 		except StopIteration as e:pass
 		failtimes=0
@@ -623,9 +631,9 @@ class People(object):
 	"""
 	
 	QUERY_PUSHEDREPOS1="""
-	query($login_name:String!){
+	query($login_name:String!,$author_id:ID!){
 	  user(login: $login_name) {
-		repositories(first: 5,affiliations:[OWNER,COLLABORATOR,ORGANIZATION_MEMBER] ,orderBy: {field: PUSHED_AT, direction: DESC}) {
+		repositories(first: 10,affiliations:[OWNER,COLLABORATOR,ORGANIZATION_MEMBER] ,orderBy: {field: PUSHED_AT, direction: DESC}) {
 		  edges {
 			node {
 			  name
@@ -633,6 +641,34 @@ class People(object):
 				login
 			  }
 			  pushedAt
+			  
+				ref(qualifiedName: "master") {
+				  target {
+					... on Commit {
+					  id
+					  history(first: 10,author:{id:$author_id}) {
+						pageInfo {
+						  hasNextPage
+						}
+						edges {
+						  node {
+							committedDate
+							messageHeadline
+							oid
+							message
+							commitUrl
+							author {
+							  name
+							  email
+							}
+						  }
+						  cursor
+						}
+					  }
+					}
+				  }
+				}
+			  
 			}
 			cursor
 		  }
@@ -645,9 +681,9 @@ class People(object):
 	"""
 	
 	QUERY_PUSHEDREPOS2="""
-	query($login_name:String!,$last_cursor:String!){
+	query($login_name:String!,$last_cursor:String!,$author_id:ID!){
 	  user(login: $login_name) {
-		repositories(first: 5,after:$last_cursor,affiliations:[OWNER,COLLABORATOR,ORGANIZATION_MEMBER] ,orderBy: {field: PUSHED_AT, direction: DESC}) {
+		repositories(first: 10,after:$last_cursor,affiliations:[OWNER,COLLABORATOR,ORGANIZATION_MEMBER] ,orderBy: {field: PUSHED_AT, direction: DESC}) {
 		  edges {
 			node {
 			  name
@@ -655,6 +691,34 @@ class People(object):
 				login
 			  }
 			  pushedAt
+			  
+				ref(qualifiedName: "master") {
+				  target {
+					... on Commit {
+					  id
+					  history(first: 10,author:{id:$author_id}) {
+						pageInfo {
+						  hasNextPage
+						}
+						edges {
+						  node {
+							committedDate
+							messageHeadline
+							oid
+							message
+							commitUrl
+							author {
+							  name
+							  email
+							}
+						  }
+						  cursor
+						}
+					  }
+					}
+				  }
+				}
+			  
 			}
 			cursor
 		  }
