@@ -161,6 +161,7 @@ class weibospider(basespider):
 		for act in pp.activities:
 			try:
 				entry={
+					'item_id':act['_id'] if '_id' in act else "",
 					'username':pp.info['NickName'] if 'NickName' in pp.info else "",
 					'avatar_url':pp.info['Avatar_url'] if 'Avatar_url' in pp.info else "",
 					'headline':pp.info['BriefIntroduction'] if 'BriefIntroduction' in pp.info else "",
