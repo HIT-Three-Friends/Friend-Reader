@@ -16,6 +16,29 @@ function init_date() {
     }
     $("#day").append($("<option></option>").val("0").html("日活跃度分析"));
     $("#day").append($("<option></option>").val("1").html("该月分析"));
+
+    $('#day').on('loaded.bs.select', function (e) {
+        var val = $("#day").val();
+        console.log(val);
+        if (val == "0") {
+            $("#month").selectpicker("hide");
+            $("#year").selectpicker("hide");
+        } else {
+            $("#year").selectpicker("show");
+            $("#month").selectpicker("show");
+        }
+    });
+
+    $('#day').on('changed.bs.select', function (e) {
+        var val = $("#day").val();
+        if (val == "0") {
+            $("#month").selectpicker("hide");
+            $("#year").selectpicker("hide");
+        } else {
+            $("#year").selectpicker("show");
+            $("#month").selectpicker("show");
+        }
+    });
     $.ajax({
         url: "/friends/",
         type: "GET",
