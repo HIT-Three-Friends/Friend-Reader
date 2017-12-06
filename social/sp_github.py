@@ -31,7 +31,7 @@ class githubspider(basespider):
 	def loadConfig(self):
 		self.config=self.allConfig['github']
 		try: self.spConfig=self.spiderConfig['github']
-		except Exception as e: logging("load spConfig fail")
+		except Exception as e: logging.error("load spConfig fail")
 		
 		self.data_path=self.socialRoot+self.config['data_path']
 		self.HEAD_FILE=self.data_path+self.config['HEAD_FILE']
