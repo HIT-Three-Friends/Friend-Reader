@@ -19,7 +19,7 @@ from backend import views as backend_views
 from django.conf.urls.static import static
 from django.conf import settings
 import frontend.views
-
+from apscheduler.scheduler import Scheduler
 urlpatterns = [
     url(r'^$',backend_views.testfuck),
     url(r'^users/$',backend_views.user,name = 'register'),
@@ -46,3 +46,10 @@ urlpatterns = [
 
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)\
               + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+sched = Scheduler()
+
+
+@sched.interval_schedule(seconds=600)
+def mytask():
+    backend_views.refresh()
+sched.start
