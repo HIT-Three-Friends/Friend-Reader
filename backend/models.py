@@ -38,9 +38,8 @@ class allactivity(models.Model):
     source_url = models.CharField(max_length = 300)
 
 class focus(models.Model):
-    father = models.IntegerField(default=0)
-    platform = models.IntegerField(default=0)
-    account = models.CharField(max_length = 30)
+    father = models.CharField(max_length = 300)
+    tag = models.CharField(max_length = 300,default='软件工程')
 
 class pics(models.Model):
     father = models.IntegerField(default=0)

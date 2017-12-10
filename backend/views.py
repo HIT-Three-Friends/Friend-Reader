@@ -6,14 +6,18 @@ from django.db.models import Q
 from social import social as socialpc
 from datetime import datetime
 import  time
+import smtplib
+from email.mime.text import MIMEText
+from email.header import Header
 from PIL import Image
-
+from email.utils import formataddr
 # Create your views here.
 def testfuck(request):
     return render(request, 'testindex.html')
 
 def refresh():
-    ac = list(friends.objects.all.values('id'))
+    print("ojbk")
+    ac = list(friends.objects.values('id'))
     for all in ac:
         refreshfriend(all['id'])
 
@@ -116,6 +120,34 @@ def myfriends(request):
         result['message'] = 'Please log in first!'
     return JsonResponse(result)
 
+#标签列表
+def myfocus(request):
+    result = {'verdict': 'success', 'message': 'Successful'}
+    username = request.session.get('username', '')
+    userinfo = users.objects.filter(username=username)
+    #是否在线
+    if userinfo:
+        if request.method == 'GET':
+            ans = focus.objects.filter(father = username).values('tag','id')
+            ans = list(ans)
+            result['tags'] = ans
+        else :
+            name = request.POST['tag']
+            name = str(name)
+            userof = str(username)
+            friendinfo = focus.objects.filter(father = username,tag = name)
+            if friendinfo:
+                result['verdict'] = 'fail'
+                result['message'] = '标签已存在'
+            else:
+                d = focus.objects.create(father = username,tag = name)
+                d = d.id
+                result['id'] = d
+    else:
+        result['verdict'] = 'error'
+        result['message'] = 'Please log in first!'
+    return JsonResponse(result)
+
 #单个好友 查询 修改 删除
 def friend(request,id):
     result = {'verdict': 'success', 'message': 'Successful'}
@@ -157,6 +189,24 @@ def friend(request,id):
         result['message'] = 'Please log in first!'
     return JsonResponse(result)
 
+#标签的修改、查询、删除
+def focu(request,id):
+    result = {'verdict': 'success', 'message': 'Successful'}
+    username = request.session.get('username', '')
+    userinfo = users.objects.filter(username=username)
+    # 是否在线
+    if userinfo:
+        if request.method == 'GET':
+            ans = focus.objects.filter(father = username,id = id).values('id','tag')
+            dict2 = list(ans)[0]
+            result.update(dict2)
+        else :
+            focus.objects.filter(father=username, id=id).delete()
+    else:
+        result['verdict'] = 'error'
+        result['message'] = 'Please log in first!'
+    return JsonResponse(result)
+
 #单个好友单个社交账号查询 修改 删除
 def asocial(request,friendid,socialid):
     result = {'verdict': 'success', 'message': 'Successful'}
@@ -177,7 +227,7 @@ def asocial(request,friendid,socialid):
             account = request.POST['account']
             account = str(account)
             oldaccount = social.objects.get(father=id, platform=socialid).account
-            if (oldaccount == account or account == '' ): return JsonResponse(result)
+            if (oldaccount == account and account != ''): return JsonResponse(result)
             social.objects.filter(father=id, platform=socialid).update(account=account)
             initact(id,int(socialid));
             return JsonResponse(result)
@@ -188,11 +238,13 @@ def asocial(request,friendid,socialid):
 
 def dt_to_t(newdatetime):
     c = newdatetime.strftime("%a %b %d %H:%M:%S %Y")
-    return time.strptime(c,"%a %b %d %H:%M:%S %Y")
+    c = c + " UTC"
+    return time.strptime(c,"%a %b %d %H:%M:%S %Y %Z")
 
 def t_to_dt(newtime):
     c = time.strftime("%a %b %d %H:%M:%S %Y",newtime)
-    return datetime.strptime(c, "%a %b %d %H:%M:%S %Y")
+    c = c + " UTC"
+    return datetime.strptime(c, "%a %b %d %H:%M:%S %Y %Z")
 
 #刷新id好友的所有动态
 def refreshfriend(id):
@@ -201,8 +253,31 @@ def refreshfriend(id):
     refreshsocial(id, 2)
     return
 
+def sendmessage(useremail,username,flag,act,name):
+    my_sender = '18800427105@163.com'  # 发件人邮箱账号，为了后面易于维护，所以写成了变量
+    my_user = useremail  # 收件人邮箱账号，为了后面易于维护，所以写成了变量
+    try:
+        text = '你的好友 ' + name +  ' 发布了关于 '
+        for ff in flag:
+            text += ff + ' '
+        text += '的内容\n'
+        text += act['summary'] + '\n' + act['targetText']
+        msg = MIMEText(text, 'plain', 'utf-8')
+        msg['From'] = formataddr(["FriendReader", my_sender])  # 括号里的对应发件人邮箱昵称、发件人邮箱账号
+        msg['To'] = formataddr([username, my_user])  # 括号里的对应收件人邮箱昵称、收件人邮箱账号
+        msg['Subject'] = "FriendReader订阅提醒"  # 邮件的主题，也可以说是标题
+
+        server = smtplib.SMTP("smtp.163.com", 25)  # 发件人邮箱中的SMTP服务器，端口是25
+        server.login(my_sender, "123321aaa")  # 括号中对应的是发件人邮箱账号、邮箱密码
+        server.sendmail(my_sender, [my_user, ], msg.as_string())  # 括号中对应的是发件人邮箱账号、收件人邮箱账号、发送邮件
+        server.quit()  # 这句是关闭连接的意思
+        print("邮件发送成功")
+    except smtplib.SMTPException:
+        print("Error: 无法发送邮件")
 #刷新id好友的socialid社交账号
 def refreshsocial(id,socialid):
+    father = list(friends.objects.filter(id = id).values('user','name'))[0]
+    user = list(users.objects.filter(username=father['user']).values("email","username"))[0]
     ac = list(social.objects.filter(father=id, platform=socialid).values('id', 'account','time'))[0]
     client = socialpc()
     plat = ['zhihu', 'weibo', 'github']
@@ -213,9 +288,10 @@ def refreshsocial(id,socialid):
     ans.sort(key=lambda x: x['time'])
     ans.reverse()
     if len(ans) > 0 :
-        mytime = t_to_dt(ans[0]['time'])
-        social.objects.filter(father=id, platform=socialid).update(time=mytime)
+
+        social.objects.filter(father=id, platform=socialid).update(time=datetime.now())
         for act in ans:
+            flag = []
             newact = allactivity.objects.create(father=ac['id'], username=act['username'], avatar_url=act['avatar_url'],
                                                 headline=act['headline'], time=t_to_dt(act['time']),
                                                 actionType=act['actionType'], summary=act['summary'],
@@ -226,16 +302,32 @@ def refreshsocial(id,socialid):
                     pics.objects.create(father=newact, imgs=pic)
             if act.__contains__('topics'):
                 for top in act['topics']:
+                    findtop =  focus.objects.filter(father=father['user'],tag=top)
+                    if findtop:
+                        flag.append(top)
+                        print(top)
                     topic.objects.create(father=newact, topics=top)
+            if len(flag) > 0:
+                sendmessage(user['email'],user['username'],flag,act,father['name'])
+
     return
+
+#清空一个账号
+def clear(id):
+    act = list(allactivity.objects.filter(father = id).values('id'))
+    allactivity.objects.filter(father=id).delete()
+    for a in act :
+        pics.objects.filter(father=a['id']).delete()
+        topic.objects.filter(father=a['id']).delete()
 
 #初始化id好友的socialid社交账号
 def initact(id,socialid):
     ac = list(social.objects.filter(father=id, platform=socialid).values('id','account'))[0]
+    clear(ac['id'])
     plat = ['zhihu', 'weibo', 'github']
-    client = socialpc()
     if ac['account'] == '' :
         return
+    client = socialpc()
     ans = client.getActivities(ac['account'], plat[socialid],1000)
     ans.sort(key=lambda x: x['time'])
     ans.reverse()
@@ -246,7 +338,9 @@ def initact(id,socialid):
     for act in ans:
         newact = allactivity.objects.create(father = ac['id'],username = act['username'],avatar_url = act['avatar_url'],headline = act['headline'],time = t_to_dt(act['time']),actionType = act['actionType'],summary = act['summary'],targetText = act['targetText'],source_url = act['source_url'])
         newact = newact.id
+
         if act.__contains__('imgs'):
+            print(act['imgs'])
             for pic in act['imgs']:
                 pics.objects.create(father=newact, imgs=pic)
         if act.__contains__('topics'):
@@ -293,7 +387,10 @@ def askactivity(username,friendid,page):
                 temp['tags'] = []
                 temp['pic'] = []
                 for p in pic:
+                    temp['word'] +=  '<hr /><img src="'+p['imgs']+'">'
                     temp['pic'].append(p['imgs'])
+
+
                 for t in tag:
                     temp['tags'].append(t['topics'])
                 temp['Video'] = []
@@ -443,3 +540,107 @@ def interests(request,friendid):
         result['message'] = 'Please log in first!'
     return JsonResponse(result)
 
+def interestyear(request,friendid):
+    result = {'verdict': 'success', 'message': 'Successful'}
+    username = request.session.get('username', '')
+    userinfo = users.objects.filter(username=username)
+    year = int(request.GET['year'])
+    if userinfo:
+        ans = askactivity(username, friendid,0)
+        mm = {}
+        tags = []
+        percent = [[0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0]] #比例
+        interestnum = 0 #兴趣种类数
+        tmpp = [] #统计用的数组
+        for x in ans:
+            if (x['G'][0] > year): continue
+            if (x['G'][0] < year): break
+            for y in x['tags']:
+                if mm.__contains__(y):
+                    tmpp[int(mm[y])][1] += 1
+                else:
+                    mm[y] = interestnum
+                    interestnum += 1
+                    tmpp.append([y,1])
+        #按照出现次数排序
+        tmpp.sort(key=lambda x: x[1])
+        tmpp.reverse()
+        tmpp = tmpp[:3]
+        intt = 0
+        for tt in tmpp:
+            tags.append(tt[0])
+        for x in ans :
+            if (x['G'][0] > year): continue
+            if (x['G'][0] < year): break
+            for y in x['tags']:
+                intt = 0
+                for tt in tags:
+                    if tt == y:
+                        percent[intt][x['G'][1]-1] += 1
+                    intt+=1
+        result['num'] = len(tmpp)
+        result['topic'] = tags
+        result['percent1'] = percent[0]
+        result['percent2'] = percent[1]
+        result['percent3'] = percent[2]
+    else:
+        result['verdict'] = 'error'
+        result['message'] = 'Please log in first!'
+    return JsonResponse(result)
+
+def interestmonth(request,friendid):
+    result = {'verdict': 'success', 'message': 'Successful'}
+    username = request.session.get('username', '')
+    days = [0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
+    userinfo = users.objects.filter(username=username)
+    year = int(request.GET['year'])
+    month = int(request.GET['month'])
+    # 确定这个月有多少天
+    renum = days[month]
+    if (year % 4 == 0 and year % 100 != 4) or year % 400 == 0:
+        renum += 1
+    L = [[0 for x in range(0, renum)],[0 for x in range(0, renum)],[0 for x in range(0, renum)]]
+    result['day'] = renum
+    if userinfo:
+        ans = askactivity(username, friendid,0)
+        mm = {}
+        tags = []
+        percent = L #比例
+        interestnum = 0 #兴趣种类数
+        tmpp = [] #统计用的数组
+        for x in ans:
+
+            if (x['G'][0] < year): break
+            if (x['G'][0] == year and x['G'][1] == month):
+                for y in x['tags']:
+                    if mm.__contains__(y):
+                        tmpp[int(mm[y])][1] += 1
+                    else:
+                        mm[y] = interestnum
+                        interestnum += 1
+                        tmpp.append([y,1])
+        #按照出现次数排序
+        tmpp.sort(key=lambda x: x[1])
+        tmpp.reverse()
+        tmpp = tmpp[:3]
+        intt = 0
+        for tt in tmpp:
+            tags.append(tt[0])
+        for x in ans :
+            if (x['G'][0] < year): break
+            if (x['G'][0] == year and x['G'][1] == month):
+                for y in x['tags']:
+                    intt = 0
+                    for tt in tags:
+                        if tt == y:
+                            percent[intt][x['G'][2]-1] += 1
+                        intt+=1
+        result['num'] = len(tmpp)
+        result['topic'] = tags
+        result['percent1'] = percent[0]
+        result['percent2'] = percent[1]
+        result['percent3'] = percent[2]
+    else:
+        result['verdict'] = 'error'
+        result['message'] = 'Please log in first!'
+    return JsonResponse(result)
