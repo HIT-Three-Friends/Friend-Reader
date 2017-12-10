@@ -10,6 +10,8 @@ from .items import TweetsItem, InformationItem
 from .weibo_parser import *
 from .cookies import getCookie
 
+strangecode="100505"
+
 class weibospider(basespider):
 	def __init__(self):
 		super().loadConfig()
@@ -26,10 +28,7 @@ class weibospider(basespider):
 		self.data_path=self.socialRoot+self.config['data_path']
 		self.COOKIE_FILE=self.data_path+self.config['COOKIE_FILE']
 		self.friends_file=self.data_path+self.config['friends_file']
-		
-		#self.url_template_question="https://www.zhihu.com/question/%s"
-		#self.url_template_answer="https://www.zhihu.com/question/%s/answer/%s"
-		#self.url_template_article="https://zhuanlan.zhihu.com/p/%s"
+
 
 	def prepare(self):
 		if not os.path.isdir(self.data_path): os.makedirs(self.data_path)
@@ -201,10 +200,10 @@ class People(object):
 		self._id=id
 		self.session=session
 		
-		self.url_template_activity="https://weibo.cn/u/%s"
-		self.url_template_userinfo="https://weibo.cn/%s/info"
-		self.url_template_following="https://weibo.cn/%s/follow"
-		self.url_template_follower="https://weibo.cn/%s/fans"
+		self.url_template_activity="https://weibo.com/u/%s?is_all=1"
+		self.url_template_userinfo="https://weibo.com/p/"+strangecode+"%s/info"
+		self.url_template_following="https://weibo.com/p/"+strangecode+"%s/follow"
+		self.url_template_follower="https://weibo.com/p/"+strangecode+"%s/follow?relate=fans"
 		
 		self._Info=None
 	
@@ -245,6 +244,7 @@ class People(object):
 		
 		r=self.session.get(self.url_userinfo)
 		if r.status_code==200:
+			with open("AkaisoraTestInfoPage.html","wb") as f:f.write(r.content)
 			self._Info=parse_information(r,self.session)
 			return self._Info
 		else: return None

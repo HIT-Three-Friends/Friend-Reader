@@ -8,9 +8,9 @@ from .sp_github import githubspider
 class social(object):
 	def __init__(self):
 		self.allSpider={
-			'zhihu':zhihuspider(),
+			#'zhihu':zhihuspider(),
 			'weibo':weibospider(),
-			'github':githubspider()
+			#'github':githubspider()
 		}
 	
 	def getActivities(self,userid,socialPlatform,count,timeOldest=None,timeLatest=None):
