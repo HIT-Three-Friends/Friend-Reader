@@ -142,6 +142,8 @@ $(function() {
                 success: function(data) {
                     var friendid = modal.find("#friendid").val();
                     var cnt = 0;
+                    $("#cover").fadeIn();
+                    $("#cover-img").fadeIn();
                     for (var i = 0; i < 3; i++) {
                         $.ajax({
                             url: "/friends/" + friendid + "/socials/" + i + "/",

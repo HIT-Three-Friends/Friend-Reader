@@ -13,12 +13,12 @@ function putFormJson(node, data) {
 }
 function add_attention(new_attention, attention) {
     new_attention.css("display", "block");
-    new_attention.find("#name").html(attention[0]);
-    console.log("before:"  + " " + attention[1]);
+    new_attention.find("#name").html(attention["tag"]);
+    console.log("before:"  + " " + attention["id"]);
     new_attention.find("#button-delete").click(function(){
         if (confirm("确认删除该话题？QAQ")) {
             $.ajax({
-                url: "/attentions/" + attention[1] + "/",
+                url: "/attentions/" + attention["id"] + "/",
                 type: "DELETE",
                 success: function(data) {
                     if (data["verdict"] == "success") {
