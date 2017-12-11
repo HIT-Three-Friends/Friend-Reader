@@ -37,6 +37,8 @@ class weibospider(basespider):
 			with open(self.friends_file,"rb") as f: self.name_map=pickle.load(f)
 		except Exception as e:
 			logging.warning("load friends failed")
+			traceback.print_exc()
+			print(e)
 			self.name_map=dict()
 			
 	def login(self):
