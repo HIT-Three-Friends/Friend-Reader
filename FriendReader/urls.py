@@ -43,6 +43,10 @@ urlpatterns = [
 
     url(r'^activities/$',backend_views.activities,name = 'act'),
     url(r'^activities/(\d+)/$',backend_views.activity,name = 'act21'),
+
+    url(r'^activitiesplatform/$', backend_views.activitiesplatform, name='actp'),
+    url(r'^activitiesplatform/(\d+)/$', backend_views.activityplatform, name='act21p'),
+
     url(r'^vitality/(\d+)/months/$',backend_views.vitalitymon,name = 'act23'),
     url(r'^vitality/(\d+)/days/$',backend_views.vitalityday,name = 'act4'),
     url(r'^interest/(\d+)/$',backend_views.interests,name = 'act5'),

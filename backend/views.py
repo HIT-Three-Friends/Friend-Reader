@@ -16,7 +16,7 @@ import urllib.request
 client = socialpc()
 def testfuck(request):
     return render(request, 'testindex.html')
-def gettopic(text):
+def gettopic(text,account):
     uri_base = "https://api.ltp-cloud.com/analysis/?"
     api_key = "F1a5e3k9w7UPcXnfjcETgQFTwWZVoCvKwIwEEtmQ"
     # Note that if your text contain special characters such as linefeed or '&',
@@ -37,13 +37,21 @@ def gettopic(text):
         print(content)
         ans = content.split()
         for a in ans:
-            if a[-3:] == "_ns":
-                newtop = a.replace('_ns', '')
-                if newtop != "微博":
+            if a[-2:] == "_a":
+                newtop = a.replace('_a', '')
+                if newtop != "微博" and newtop not in account:
                     top.append(newtop)
             elif a[-2:] == '_n':
                 newtop = a.replace('_n', '')
-                if newtop != "微博":
+                if newtop != "微博" and newtop not in account:
+                    top.append(newtop)
+            elif a[-2:] == '_i':
+                newtop = a.replace('_i', '')
+                if newtop != "微博" and newtop not in account:
+                    top.append(newtop)
+            elif a[-3:] == '_nz':
+                newtop = a.replace('_nz', '')
+                if newtop != "微博" and newtop not in account:
                     top.append(newtop)
     except :
         top = []
@@ -335,7 +343,7 @@ def refreshsocial(id,socialid):
                     pics.objects.create(father=newact, imgs=pic)
             if act['topics'] == []:
                 print(act['targetText'])
-                act['topics'] = gettopic(act['targetText'] + " "+act['summary'])
+                act['topics'] = gettopic(act['targetText'] + " "+act['summary'],ac['account'])
             addmylove(act, ac['id'])
             for top in act['topics']:
                 findtop = focus.objects.filter(father=father['user'], tag=top)
@@ -352,6 +360,7 @@ def clear(id):
     act = list(allactivity.objects.filter(father = id).values('id'))
     ffll = list(friendfriend.objects.filter(father = id).values('id'))
     allactivity.objects.filter(father=id).delete()
+    time.sleep(0.1)
     friendfriend.objects.filter(father=id).delete()
     for a in act :
         pics.objects.filter(father=a['id']).delete()
@@ -381,7 +390,7 @@ def initact(id,socialid):
                 pics.objects.create(father=newact, imgs=pic)
         if act['topics']==[]:
             print(act['targetText'])
-            act['topics'] = gettopic(act['targetText'] + " "+act['summary'])
+            act['topics'] = gettopic(act['targetText'] + " "+act['summary'],ac['account'])
         addmylove(act,ac['id'])
         for top in act['topics']:
             topic.objects.create(father=newact, topics=top)
@@ -389,7 +398,7 @@ def initact(id,socialid):
 
 
 #给定用户名，以及朋友编号，获取所有动态
-def askactivity(username,friendid,page,socialid = 0):
+def askactivity(username,friendid,page,socialid = -1):
     #获取好友信息
     friendinfo = friends.objects.filter(user=username, friendid=friendid)
     if friendinfo:
@@ -403,7 +412,7 @@ def askactivity(username,friendid,page,socialid = 0):
         plat = ['zhihu', 'weibo', 'github']
         #枚举每个账号，寻找动态
         for anacount in account:
-            if socialid !=0 and socialid != int(anacount['platform']):
+            if socialid !=-1 and socialid != int(anacount['platform']):
                 continue
             #获取动态信息
             allacts = list(allactivity.objects.filter(father = anacount['id']).values('time','summary','targetText','id','source_url'))
@@ -460,7 +469,55 @@ def activity(request,friendid):
         result['message'] = 'Please log in first!'
     return JsonResponse(result)
 
+#外部请求，获取一个好友的全部动态
+def activityplatform(request,friendid):
+    result = {'verdict': 'success', 'message': 'Successful'}
+    username = request.session.get('username', '')
+    userinfo = users.objects.filter(username=username)
+    page = int(request.GET['page'])
+    platform = int(request.GET['platform'])
+    if userinfo:
+        acts = askactivity(username,friendid,page,platform)
+        if (len(acts) >= 10 * page):
+            result['activitynum'] = 10
+        else:
+            result['activitynum'] = max(0,len(acts) - 10 * page + 10)
+        result['activity'] = acts[(10 * page - 10):(10 * page)]
+    else:
+        result['verdict'] = 'error'
+        result['message'] = 'Please log in first!'
+    return JsonResponse(result)
+
 #获取好友所有动态
+def activitiesplatform(request):
+    result = {'verdict': 'success', 'message': 'Successful'}
+    plat = ['zhihu','weibo','github']
+    username = request.session.get('username', '')
+    userinfo = users.objects.filter(username=username)
+    page = int(request.GET['page'])
+    platform = int(request.GET['platform'])
+    acts = []
+    if userinfo:
+        #获取好友列表
+        id = friends.objects.filter(user=username).values('id', 'name', 'sex', 'avatar', 'friendid')
+        id = list(id)
+        #对于每个好友获取动态列表
+        for afriend in id:
+            acts += askactivity(username,afriend['friendid'],page,platform)
+        #所有信息按照时间排序
+        acts.sort(key=lambda x: x['t'])
+        acts.reverse()
+        #统计动态个数和page的关系
+        if (len(acts) >= 10 * page):
+            result['activitynum'] = 10
+        else:
+            result['activitynum'] = max(0,len(acts) - 10 * page + 10)
+        result['activity'] = acts[(10 * page - 10):(10 * page)]
+    else:
+        result['verdict'] = 'error'
+        result['message'] = 'Please log in first!'
+    return JsonResponse(result)
+
 def activities(request):
     result = {'verdict': 'success', 'message': 'Successful'}
     plat = ['zhihu','weibo','github']
@@ -553,9 +610,10 @@ def interests(request,friendid):
         for x in ans:
             if (x['G'][0] > eyear) or ( x['G'][0] == eyear and x['G'][1] > emonth ) or (x['G'][0] == eyear and x['G'][1] == emonth and x['G'][2] > eday): continue
             if (x['G'][0] < byear) or ( x['G'][0] == byear and x['G'][1] < bmonth ) or (x['G'][0] == byear and x['G'][1] == bmonth and x['G'][2] < bday): break
+            L = len(x['tags'])
             for y in x['tags']:
                 if mm.__contains__(y):
-                    tmpp[int(mm[y])][1] += 1
+                    tmpp[int(mm[y])][1] += 1/L
                 else:
                     mm[y] = interestnum
                     interestnum += 1
@@ -594,9 +652,10 @@ def interestyear(request,friendid):
         for x in ans:
             if (x['G'][0] > year): continue
             if (x['G'][0] < year): break
+            L = len(x['tags'])
             for y in x['tags']:
                 if mm.__contains__(y):
-                    tmpp[int(mm[y])][1] += 1
+                    tmpp[int(mm[y])][1] += 1/L
                 else:
                     mm[y] = interestnum
                     interestnum += 1
@@ -611,11 +670,12 @@ def interestyear(request,friendid):
         for x in ans :
             if (x['G'][0] > year): continue
             if (x['G'][0] < year): break
+            L = len(x['tags'])
             for y in x['tags']:
                 intt = 0
                 for tt in tags:
                     if tt == y:
-                        percent[intt][x['G'][1]-1] += 1
+                        percent[intt][x['G'][1]-1] += 1/L
                     intt+=1
         result['num'] = len(tmpp)
         result['topic'] = tags
@@ -651,9 +711,10 @@ def interestmonth(request,friendid):
 
             if (x['G'][0] < year): break
             if (x['G'][0] == year and x['G'][1] == month):
+                L = len(x['tags'])
                 for y in x['tags']:
                     if mm.__contains__(y):
-                        tmpp[int(mm[y])][1] += 1
+                        tmpp[int(mm[y])][1] += 1.0/L
                     else:
                         mm[y] = interestnum
                         interestnum += 1
@@ -670,9 +731,10 @@ def interestmonth(request,friendid):
             if (x['G'][0] == year and x['G'][1] == month):
                 for y in x['tags']:
                     intt = 0
+                    L = len(tags)
                     for tt in tags:
                         if tt == y:
-                            percent[intt][x['G'][2]-1] += 1
+                            percent[intt][x['G'][2]-1] += 1.0/L
                         intt+=1
         result['num'] = len(tmpp)
         result['topic'] = tags
@@ -698,6 +760,7 @@ def initfriendfriend(friendid,socialid):
     for love in lovelove:
         loveinfo = friendfriend.objects.filter(father = myid['id'],account=love) #检测关系数据是否存在
         if loveinfo: # 老的好友
+            continue
             #oldfriendfriend()
             # 爬 动态
             tloved = 0.0 # 你得好友被互动次数 = 0
@@ -710,7 +773,7 @@ def initfriendfriend(friendid,socialid):
                 # 提取话题
                 # 保存话题
                 if myid['account'] in act['actionType'] or myid['account'] in act['summary'] or myid['account'] in act['targetText']:
-                    top = gettopic(act['targetText'] + " "+act['summary']) # 获取好友的话题
+                    top = gettopic(act['targetText']+" "+act['summary']) # 获取好友的话题
                     L = len(top)
                     for tt in top:
                         tloved += 1.0/L
@@ -726,6 +789,7 @@ def initfriendfriend(friendid,socialid):
             # 数据库新建
             # 爬 动态
             newf = friendfriend.objects.create(father=myid['id'], account=love,time=datetime.now())
+            continue
             ans = client.getActivities(love, plat[socialid], 100)
             tloved = 0.0
             for act in ans :
@@ -765,8 +829,9 @@ def addmylove(act,socialtid):
                 friendfriend.objects.filter(father=socialtid, account=fff['account']).update(love=fff['love'] + 1)
     return
 # 获取好友互动排名，互动话题数+话题top3
-def interaction(request,id,socialid):
+def interaction(request,id):
     result = {'verdict': 'success', 'message': 'Successful'}
+    socialid = 1
     username = request.session.get('username', '')
     userinfo = users.objects.filter(username=username)
     if userinfo:
@@ -775,9 +840,7 @@ def interaction(request,id,socialid):
             afriend = \
             list(friends.objects.filter(user=username, friendid=id).values('friendid', 'id', 'name', 'sex', 'avatar'))[0]
             socialaccount = list(social.objects.filter(platform=socialid,father=afriend['id']).values('id','account'))[0]
-
             ffll = list(friendfriend.objects.filter(father = socialaccount['id']).values('id','loved','love','account'))
-            #获取id好友的三个社交网站的账号
             for fff in ffll:
                 fff['total'] = fff['love']+ fff['loved']
             ffll.sort(key=lambda x: x['total'])
@@ -793,7 +856,7 @@ def interaction(request,id,socialid):
                 tops.sort(key=lambda x: x['pp'])
                 tops.reverse()
                 nowpp = 0.0
-                topcnt = 1;
+                topcnt = 1
                 tmp['Tag1'] = ''
                 tmp['Num1'] = 0.0
                 tmp['Tag2'] = ''
@@ -804,7 +867,7 @@ def interaction(request,id,socialid):
                     tmp['Tag' + str(topcnt)] = top['topics']
                     tmp['Num' + str(topcnt)] = top['pp']
                     nowpp += top['pp']
-                    topcnt+=1;
+                    topcnt+=1
                 tmp['NumN'] = fff['total'] - nowpp
                 res.append(tmp)
             result['interactions'] = res
