@@ -23,7 +23,7 @@ def parse_information(response,session):
 		informationItem = {}
 		root=html.fromstring(response.text)
 		ID = re.search(r"\$CONFIG\['oid'\]='(\d+)'", response.text).group(1)
-		print(ID)
+		#print(ID)
 		scriptList=root.xpath("//script")
 		peoInfo=None
 		for script in scriptList:
@@ -43,8 +43,8 @@ def parse_information(response,session):
 					'微博':'Num_Tweets','关注':'Num_Follows','粉丝':'Num_Fans'}
 			
 		for li in infoList:
-			classi=li.xpath('span[1]')[0].text
-			value=li.xpath('span[2]')[0].text
+			classi=li.xpath('./*[1]')[0].text
+			value=li.xpath('./*[2]')[0].text
 			classi=classi.strip(':').strip('：')
 			if classi in infoKeyMap:
 				informationItem[infoKeyMap[classi]]=value
@@ -260,7 +260,7 @@ def getNextPageUrl(blogs):
 def transtime(timstr):
 	"""2017-12-09 02:34"""
 	
-	timstr=re.search(r'昨天\d+:\d+|\d+月\d+日|今天\d+:\d+|\d+分钟前|\d+秒钟前|\d+-\d+-\d+',timstr).group()
+	timstr=re.search(r'昨天\d+:\d+|\d+月\d+日|今天\d+:\d+|\d+分钟前|\d+秒钟前|\d+小时前|\d+-\d+-\d+',timstr).group()
 	lct=datetime.datetime.now()
 	try:
 		tim=datetime.datetime.strptime(timstr,"%Y-%m-%d %H:%M")
@@ -293,6 +293,11 @@ def transtime(timstr):
 	try:
 		deltasec=int(re.fullmatch("(\d{1,2})秒钟前",timstr).group(1))
 		tim=datetime.datetime.now()+datetime.timedelta(seconds=-deltasec)
+		return tim.strftime("%Y-%m-%d %H:%M")
+	except Exception as e:pass
+	try:
+		deltahour=int(re.fullmatch("(\d{1,2})小时前",timstr).group(1))
+		tim=datetime.datetime.now()+datetime.timedelta(hours=-deltahour)
 		return tim.strftime("%Y-%m-%d %H:%M")
 	except Exception as e:pass
 	try:
