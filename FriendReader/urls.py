@@ -57,7 +57,7 @@ urlpatterns = [
               + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 from apscheduler.scheduler import Scheduler
 sched = Scheduler()
-@sched.interval_schedule(seconds=300)
+@sched.interval_schedule(seconds=600)
 def mytask():
     print("cnm600")
     backend_views.refresh()

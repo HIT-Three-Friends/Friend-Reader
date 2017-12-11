@@ -29,12 +29,10 @@ def gettopic(text,account):
            + "text=" + text + "&"
            + "format=" + format + "&"
            + "pattern=" + 'pos')
-    print(url)
     top = []
     try:
         response = urllib.request.urlopen(url)
         content = response.read().strip().decode('utf8')
-        print(content)
         ans = content.split()
         for a in ans:
             if a[-2:] == "_a":
@@ -206,7 +204,12 @@ def friend(request,id):
             dict2['social'] = list(xsocial)
             result.update(dict2)
         elif request.method == 'DELETE':
-            friends.objects.filter(user=username,friendid = id).delete()
+            ff = friends.objects.filter(user=username, friendid=id)
+            ffid = list(ff.values('id'))
+            for fffid in ffid :
+                socialc = (social.objects.filter(father=fffid['id']).values('id'))[0]['id']
+                clear(socialc)
+            ff.delete()
         else:
             friendinfo = friends.objects.filter(user=username, friendid=id)
             name = request.POST.get('name','ljrsb')
@@ -342,7 +345,6 @@ def refreshsocial(id,socialid):
                 for pic in act['imgs']:
                     pics.objects.create(father=newact, imgs=pic)
             if act['topics'] == []:
-                print(act['targetText'])
                 act['topics'] = gettopic(act['targetText'] + " "+act['summary'],ac['account'])
             addmylove(act, ac['id'])
             for top in act['topics']:
@@ -389,7 +391,6 @@ def initact(id,socialid):
             for pic in act['imgs']:
                 pics.objects.create(father=newact, imgs=pic)
         if act['topics']==[]:
-            print(act['targetText'])
             act['topics'] = gettopic(act['targetText'] + " "+act['summary'],ac['account'])
         addmylove(act,ac['id'])
         for top in act['topics']:
@@ -398,7 +399,7 @@ def initact(id,socialid):
 
 
 #给定用户名，以及朋友编号，获取所有动态
-def askactivity(username,friendid,page,socialid = -1):
+def askactivity(username,friendid,page,socialid):
     #获取好友信息
     friendinfo = friends.objects.filter(user=username, friendid=friendid)
     if friendinfo:
@@ -458,7 +459,7 @@ def activity(request,friendid):
     userinfo = users.objects.filter(username=username)
     page = int(request.GET['page'])
     if userinfo:
-        acts = askactivity(username,friendid,page)
+        acts = askactivity(username,friendid,page,-1)
         if (len(acts) >= 10 * page):
             result['activitynum'] = 10
         else:
@@ -469,7 +470,7 @@ def activity(request,friendid):
         result['message'] = 'Please log in first!'
     return JsonResponse(result)
 
-#外部请求，获取一个好友的全部动态
+#外部请求，获取一个好友的全部动态 平台筛选
 def activityplatform(request,friendid):
     result = {'verdict': 'success', 'message': 'Successful'}
     username = request.session.get('username', '')
@@ -488,7 +489,7 @@ def activityplatform(request,friendid):
         result['message'] = 'Please log in first!'
     return JsonResponse(result)
 
-#获取好友所有动态
+#获取好友所有动态 平台筛选
 def activitiesplatform(request):
     result = {'verdict': 'success', 'message': 'Successful'}
     plat = ['zhihu','weibo','github']
@@ -518,6 +519,7 @@ def activitiesplatform(request):
         result['message'] = 'Please log in first!'
     return JsonResponse(result)
 
+#外部请求，获取一个好友的全部动态
 def activities(request):
     result = {'verdict': 'success', 'message': 'Successful'}
     plat = ['zhihu','weibo','github']
@@ -531,7 +533,7 @@ def activities(request):
         id = list(id)
         #对于每个好友获取动态列表
         for afriend in id:
-            acts += askactivity(username,afriend['friendid'],page)
+            acts += askactivity(username,afriend['friendid'],page,-1)
         #所有信息按照时间排序
         acts.sort(key=lambda x: x['t'])
         acts.reverse()
@@ -751,8 +753,11 @@ def initfriendfriend(friendid,socialid):
     plat = ['zhihu', 'weibo', 'github']
     #获取关注人+被关注人
     myid = list(social.objects.filter(father=friendid,platform=socialid).values('id','account'))[0]
-    mylove = []#你好友的关注人
-    loveme = []#关注你好友的人
+    print(myid['account'])
+    if (socialid != 1) :
+        return
+    mylove = client.getFollowings(myid['account'],plat[socialid],300)
+    loveme = client.getFollowers(myid['account'],plat[socialid],300)
     lovelove = []#和你好友互相关注的人
     for love in mylove:
         if love in loveme:
@@ -760,7 +765,7 @@ def initfriendfriend(friendid,socialid):
     for love in lovelove:
         loveinfo = friendfriend.objects.filter(father = myid['id'],account=love) #检测关系数据是否存在
         if loveinfo: # 老的好友
-            continue
+            #continue
             #oldfriendfriend()
             # 爬 动态
             tloved = 0.0 # 你得好友被互动次数 = 0
@@ -789,7 +794,7 @@ def initfriendfriend(friendid,socialid):
             # 数据库新建
             # 爬 动态
             newf = friendfriend.objects.create(father=myid['id'], account=love,time=datetime.now())
-            continue
+            #continue
             ans = client.getActivities(love, plat[socialid], 100)
             tloved = 0.0
             for act in ans :
