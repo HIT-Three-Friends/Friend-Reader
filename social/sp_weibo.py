@@ -182,7 +182,52 @@ class weibospider(basespider):
 			cnt+=1
 			if cnt>=count:break
 		
+	def putComment(self,comment,mid,token):
+		url="https://api.weibo.com/2/comments/create.json"
+		payload={'access_token':token,'comment':comment,'id':int(mid)}
+		r=requests.post(url,data=payload)
 		
+		if r.status_code!=200:
+			logging.error("putComment status_code=%d"%r.status_code)
+			print(r.json())
+			return False
+		js=r.json()
+		if 'created_at' not in js:
+			return False
+			print(js)
+		return True
+		
+	def checkToken(self,token):
+		url="https://api.weibo.com/oauth2/get_token_info"
+		payload={'access_token':token}
+		r=requests.post(url,data=payload)
+		
+		js=r.json()
+		if r.status_code!=200 or 'error' in js:
+			logging.error("putComment status_code=%d"%r.status_code)
+			print(js)
+			return False
+		
+		expire_in=int(js['expire_in'])
+		if expire_in<=0:return False
+		else:return True
+	
+	def getAuthorizationUrl(self):
+		url="https://api.weibo.com/oauth2/authorize"
+		payload={'client_id':self.spConfig['APP_KEY'],'response_type':'code','redirect_uri':self.spConfig['CALLBACK_URL']}
+		url=url+"?"+"&".join(map(lambda x:x[0]+"="+x[1],payload.items()))
+		return url
+	
+	def getAccessToken(self,code):
+		url="https://api.weibo.com/oauth2/access_token"
+		payload={'client_id':self.spConfig['APP_KEY'],'client_secret':self.spConfig['APP_SECRET'],'grant_type':'authorization_code','code':code,'redirect_uri':self.spConfig['CALLBACK_URL']}
+		r=requests.post(url,data=payload)
+		js=r.json()
+		if "access_token" in js:
+			return js['access_token']
+		else:
+			print(js)
+			return False
 	
 	def screen_name2userid(self,screen_name):
 		url='https://api.weibo.com/2/users/show.json'
@@ -190,8 +235,8 @@ class weibospider(basespider):
 		r=requests.get(url,params=params)
 		if r.status_code!=200: return None
 		else: 
-			self.name_map[screen_name]=str(r.json()['id'])
-			with open(self.friends_file,"wb") as f: pickle.dump(self.name_map,f)
+			#self.name_map[screen_name]=str(r.json()['id'])
+			#with open(self.friends_file,"wb") as f: pickle.dump(self.name_map,f)
 			return str(r.json()['id'])
 
 class People(object):
