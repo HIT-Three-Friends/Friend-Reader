@@ -13,7 +13,7 @@ sys.stdout = io.TextIOWrapper(sys.stdout.buffer,encoding='gb18030')         #改
 
 host = "https://weibo.com"
 pageBarUrl="https://weibo.com/p/aj/v6/mblog/mbloglist?ajwvr=6&domain=100505&profile_ftype=1&is_all=1&pagebar=%d&pl_name=%s&id=100505%s&script_uri=/p/100505%s/home&feed_type=0&page=%d&pre_page=%d&domain_op=100505"
-
+commentSmallUrl="https://weibo.com/aj/v6/comment/small?ajwvr=6&act=list&mid=%s&uid=%s&isMain=true&dissDataFromFeed=%5Bobject%20Object%5D&ouid=%s&location=page_100505_home&comment_type=0&_t=0"
 def parse_information(response,session):
 	""" 抓取个人信息 """
 	
@@ -165,6 +165,10 @@ def parse_tweets(response,session):
 		if response.status_code!=200:
 			logging.error("gate page data fail "+url)
 
+def getComments(response,session):
+	pass
+
+
 def parse_followings(response,session):
 	""" 抓取关注人列表 """
 	while(True):
@@ -222,14 +226,16 @@ def sharpContent(ss):
 	
 def getNextPageUrl(blogs):
 	listPage=blogs.xpath(".//div[@node-type='feed_list_page']")
-	if not listPage:return None
+	lazyload=blogs.xpath(".//div[@node-type='lazyload']")
+	if lazyload:return None
+	if not listPage:return "end"
 	# print("="*30)
 	# print(etree.tostring(listPage[0]))
 	# print("="*30)
 	nextPage=listPage[0].xpath("./div[@class='W_pages']/a[@class='page next S_txt1 S_line1']/@href")
 	if not nextPage:return "end"
 	return nextPage[0]
-	
+
 def transtime(timstr):
 	"""2017-12-09 02:34"""
 	
