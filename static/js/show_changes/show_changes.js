@@ -1,11 +1,12 @@
 window.chartColors = ['rgb(255, 99, 132)',
     'rgb(255, 159, 64)',
-    'rgb(255, 205, 86)',
     'rgb(75, 192, 192)',
+    'rgb(255, 205, 86)',
     'rgb(54, 162, 235)',
     'rgb(201, 203, 207)',
     'rgb(153, 102, 255)'];
 function render_year(data) {
+    console.log(data);
     var xz = new Array();
     for (var i = 0; i < 12; i++)
         xz.push((i+1).toString());
@@ -17,7 +18,7 @@ function render_year(data) {
         new_set.borderColor = window.chartColors[i];
         new_set.data = data["percent"+(i+1)];
         new_set.fill = false;
-        set.append(new_set);
+        set.push(new_set);
     }
     var config = {
         type: 'line',
@@ -74,7 +75,7 @@ function render_month(data) {
         new_set.borderColor = window.chartColors[i];
         new_set.data = data["percent"+(i+1)];
         new_set.fill = false;
-        set.append(new_set);
+        set.push(new_set);
     }
     var config = {
         type: 'line',
