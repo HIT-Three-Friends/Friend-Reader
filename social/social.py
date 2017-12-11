@@ -63,12 +63,12 @@ class social(object):
 		返回关注列表的生成器
 		userid:用户唯一标识符
 		socialPlatform:平台名称
+		count:数量
 			=======	=========
 			平台	platform
 			=======	=========
 			微博	weibo
 			=======	=========
-		count:获取的用户条数
 		RETURN 用户名字符串
 		
 		SAMPLE Useage
@@ -89,12 +89,12 @@ class social(object):
 		返回粉丝列表的生成器
 		userid:用户唯一标识符
 		socialPlatform:平台名称
+		count:数量
 			=======	=========
 			平台	platform
 			=======	=========
 			微博	weibo
 			=======	=========
-		count:获取的用户条数
 		RETURN 用户名字符串
 		
 		SAMPLE Useage
@@ -110,6 +110,106 @@ class social(object):
 		if socialPlatform!="weibo":return []
 		return self.allSpider[socialPlatform].getFollowers(userid,count)
 	
+	def putComment(self,socialPlatform,comment,mid,token):
+		"""
+		对某一微博进行评论
+		socialPlatform:平台名称
+		comment:评论
+		mid:微博mid
+		token:AccessToken
+			=======	=========
+			平台	platform
+			=======	=========
+			微博	weibo
+			=======	=========
+
+		RETURN True/False
+		
+		SAMPLE Useage
+		===============begin====================
+			import social
+
+			cli=social.social()
+
+			cli.putComment('weibo','郑爹强啊',mid,AccessToken)
+		===============end=======================
+		"""
+		if socialPlatform!="weibo":return False
+		return self.allSpider[socialPlatform].putComment(comment,mid,token)
+		
+	def checkToken(self,socialPlatform,token):
+		"""
+		检查Token是否有效
+		socialPlatform:平台名称
+		token:AccessToken
+			=======	=========
+			平台	platform
+			=======	=========
+			微博	weibo
+			=======	=========
+
+		RETURN True/False
+		
+		SAMPLE Useage
+		===============begin====================
+			import social
+
+			cli=social.social()
+
+			cli.checkToken('weibo',AccessToken)
+		===============end=======================
+		"""
+		if socialPlatform!="weibo":return False
+		return self.allSpider[socialPlatform].checkToken(token)
+		
+	def getAuthorizationUrl(self,socialPlatform):
+		"""
+		生成授权页面链接
+		socialPlatform:平台名称
+			=======	=========
+			平台	platform
+			=======	=========
+			微博	weibo
+			=======	=========
+
+		RETURN 字符串,链接Url
+		
+		SAMPLE Useage
+		===============begin====================
+			import social
+
+			cli=social.social()
+
+			Url=cli.getAuthorizationUrl('weibo')
+		===============end=======================
+		"""
+		if socialPlatform!="weibo":return None
+		return self.allSpider[socialPlatform].getAuthorizationUrl()
+		
+	def getAccessToken(self,socialPlatform,code):
+		"""
+		获得用户的Token
+		socialPlatform:平台名称
+		code:授权页面重定向后附带的参数code
+			=======	=========
+			平台	platform
+			=======	=========
+			微博	weibo
+			=======	=========
+
+		RETURN True/False
+		
+		SAMPLE Useage
+		===============begin====================
+			import social
+
+			cli=social.social()
+			
+			AccessToken=cli.getAccessToken('weibo',code)
+		===============end=======================
+		"""
+		if socialPlatform!="weibo":return False
+		return self.allSpider[socialPlatform].getAccessToken(code)
 		
 if __name__=="__main__":
 	testsocial=social()
