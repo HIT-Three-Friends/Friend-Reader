@@ -140,6 +140,9 @@ class weibospider(basespider):
 				}
 				if 'ImageUrls' in act: entry['imgs']=act['ImageUrls']
 				elif act['ActType']=="like" and 'OriginImageUrls' in act: entry['imgs']=act['OriginImageUrls']
+				if 'Comments' in act:
+					entry['comments']=act['Comments']
+				
 				
 				dt=datetime.datetime(*entry['time'][0:6])
 				if dtLatest and dtLatest<dt:continue
@@ -230,13 +233,17 @@ class weibospider(basespider):
 			return False
 	
 	def screen_name2userid(self,screen_name):
+		if screen_name in self.name_map:return self.name_map[screen_name]
+		
 		url='https://api.weibo.com/2/users/show.json'
 		params={'screen_name':screen_name,'access_token':self.spConfig['access_token']}
 		r=requests.get(url,params=params)
-		if r.status_code!=200: return None
+		if r.status_code!=200:
+			print(r.json())
+			return None
 		else: 
-			#self.name_map[screen_name]=str(r.json()['id'])
-			#with open(self.friends_file,"wb") as f: pickle.dump(self.name_map,f)
+			self.name_map[screen_name]=str(r.json()['id'])
+			with open(self.friends_file,"wb") as f: pickle.dump(self.name_map,f)
 			return str(r.json()['id'])
 
 class People(object):

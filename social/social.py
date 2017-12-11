@@ -41,6 +41,7 @@ class social(object):
 			'imgs'			图片url列表
 			'topics'		话题列表
 			'source_url'	原文链接
+			'comments'		一些评论的生成器，包含'commentId','commentImgUrls','commentNickName','commentContent'
 			=============	===============
 			建议使用前检查一下key是否存在
 			

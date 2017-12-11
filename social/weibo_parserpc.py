@@ -14,6 +14,7 @@ sys.stdout = io.TextIOWrapper(sys.stdout.buffer,encoding='gb18030')         #改
 host = "https://weibo.com"
 pageBarUrl="https://weibo.com/p/aj/v6/mblog/mbloglist?ajwvr=6&domain=100505&profile_ftype=1&is_all=1&pagebar=%d&pl_name=%s&id=100505%s&script_uri=/p/100505%s/home&feed_type=0&page=%d&pre_page=%d&domain_op=100505"
 commentSmallUrl="https://weibo.com/aj/v6/comment/small?ajwvr=6&act=list&mid=%s&uid=%s&isMain=true&dissDataFromFeed=%5Bobject%20Object%5D&ouid=%s&location=page_100505_home&comment_type=0&_t=0"
+commentSmallisAllUrl="https://weibo.com/aj/v6/comment/small?ajwvr=6&mid=%s&filter=all"
 def parse_information(response,session):
 	""" 抓取个人信息 """
 	
@@ -142,7 +143,9 @@ def parse_tweets(response,session):
 					tweetsItems['PubTime']=blog.xpath(".//a[@node-type='feed_list_item_date']/@title")[0]
 					if blog.xpath(".//div[@class='media_box']"):
 						tweetsItems['ImageUrls']=blog.xpath(".//div[@class='media_box']//img/@src")
-					
+				if 'mid' in tweetsItems:
+					tweetsItems['Comments']=getComments(ID,tweetsItems['mid'],session)
+				
 				yield tweetsItems
 			except Exception as e:
 				traceback.print_exc()
@@ -165,9 +168,27 @@ def parse_tweets(response,session):
 		if response.status_code!=200:
 			logging.error("gate page data fail "+url)
 
-def getComments(response,session):
-	pass
-
+def getComments(userid,mid,session):
+	url=commentSmallisAllUrl%(mid)
+	r=session.get(url)
+	js=r.json()
+	if r.status_code!=200:
+		print(js)
+		logging.error("getComment fail status_code=%d"%r.status_code)
+	total=js['data']['count']
+	if total<=0:return []
+	
+	root=html.fromstring("<html>"+js['data']['html']+"</html>")
+	commentList=root.xpath(".//div[@node-type='root_comment']")
+	for comment in commentList:
+		commentItem={}
+		
+		commentItem['commentId']=comment.xpath("./@comment_id")[0]
+		commentItem['commentNickName']=comment.xpath("./div[@node-type='replywrap']/div[@class='WB_text']/a[@usercard]/text()")[0]
+		commentItem['commentContent']=sharpContent("".join(comment.xpath("./div[@node-type='replywrap']/div[@class='WB_text']/text()"))).strip(':').strip('：')
+		commentItem['commentImgUrls']=list(map(lambda x:"https:"+x,comment.xpath("./div[@node-type='replywrap']//div[@class='media_box']//img/@src")))
+		
+		yield commentItem
 
 def parse_followings(response,session):
 	""" 抓取关注人列表 """
