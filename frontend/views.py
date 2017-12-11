@@ -30,3 +30,11 @@ def config_user(request):
 def config_friends(request):
     return render(request, "config_friends.html")
 
+
+def show_changes(request):
+    return render(request, "show_changes.html")
+
+
+def show_interactions(request):
+    return render(request, "show_interactions.html")
+
