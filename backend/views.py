@@ -399,7 +399,7 @@ def initact(id,socialid):
 
 
 #给定用户名，以及朋友编号，获取所有动态
-def askactivity(username,friendid,page,socialid):
+def askactivity(username,friendid,page,socialid = -1):
     #获取好友信息
     friendinfo = friends.objects.filter(user=username, friendid=friendid)
     if friendinfo:
