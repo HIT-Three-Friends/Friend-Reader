@@ -7,8 +7,10 @@ import pickle,logging,re,configparser
 import requests
 from .sp_base import basespider
 from .items import TweetsItem, InformationItem
-from .weibo_parser import *
+from .weibo_parserpc import *
 from .cookies import getCookie
+
+strangecode="100505"
 
 class weibospider(basespider):
 	def __init__(self):
@@ -26,10 +28,7 @@ class weibospider(basespider):
 		self.data_path=self.socialRoot+self.config['data_path']
 		self.COOKIE_FILE=self.data_path+self.config['COOKIE_FILE']
 		self.friends_file=self.data_path+self.config['friends_file']
-		
-		#self.url_template_question="https://www.zhihu.com/question/%s"
-		#self.url_template_answer="https://www.zhihu.com/question/%s/answer/%s"
-		#self.url_template_article="https://zhuanlan.zhihu.com/p/%s"
+
 
 	def prepare(self):
 		if not os.path.isdir(self.data_path): os.makedirs(self.data_path)
@@ -88,30 +87,8 @@ class weibospider(basespider):
 		def transtime(timstr):
 			lct=time.localtime()
 			try:
-				tim=time.strptime(timstr,"%Y-%m-%d %H:%M:%S")
+				tim=time.strptime(timstr,"%Y-%m-%d %H:%M")
 				return tim
-			except Exception as e:pass
-			try:
-				tim=time.strptime(timstr,"%m月%d日 %H:%M")
-				timstr=timstr+time.strftime("+%Y",lct)
-				tim=time.strptime(timstr,"%m月%d日 %H:%M+%Y")
-				return tim
-			except Exception as e:traceback.print_exc()
-			try:
-				tim=time.strptime(timstr,"今天 %H:%M")
-				timstr=timstr+time.strftime("+%Y,%m,%d",lct)
-				tim=time.strptime(timstr,"今天 %H:%M+%Y,%m,%d")
-				return tim
-			except Exception as e:pass
-			try:
-				deltamin=int(re.fullmatch("(\d{1,2})分钟前",timstr).group(1))
-				tim=datetime.datetime.now()+datetime.timedelta(minutes=-deltamin)
-				return time.localtime(time.mktime(tim.timetuple()))
-			except Exception as e:pass
-			try:
-				deltasec=int(re.fullmatch("(\d{1,2})秒钟前",timstr).group(1))
-				tim=datetime.datetime.now()+datetime.timedelta(seconds=-deltasec)
-				return time.localtime(time.mktime(tim.timetuple()))
 			except Exception as e:pass
 			return time.localtime()
 			
@@ -121,58 +98,48 @@ class weibospider(basespider):
 			if 'TransFrom' not in act:act['TransFrom']=""
 			
 			if act['ActType']=="origin":
-				return "%s 发表了微博 %s"%(pp.info['NickName'],act['Content'] if len(act['Content'])<30 else act['Content'][:27]+"...")
+				return "%s 发表了微博 | %s"%(pp.info['NickName'],act['Content'])   # if len(act['Content'])<30 else act['Content'][:27]+"...")
 			elif act['ActType']=="trans":
-				return "%s 转发了 %s 的微博 %s"%(pp.info['NickName'],act['TransFrom'],act['OriginContent'] if len(act['OriginContent'])<30 else act['OriginContent'][:27]+"...")
+				return "%s 转发了 %s 的微博 | %s//@%s:%s"%(pp.info['NickName'],act['TransFrom'],act['Content'],act['TransFrom'],act['OriginContent'])   #if len(act['OriginContent'])<30 else act['OriginContent'][:27]+"...")
+			elif act['ActType']=="like":
+				return "%s 赞了 %s 的微博 | %s"%(pp.info['NickName'],act['TransFrom'],act['OriginContent'])   #if len(act['OriginContent'])<30 else act['OriginContent'][:27]+"...")
 			else:
 				return ""
 		
 		if isinstance(userid,int):userid=str(userid)
 		backuserid=userid
+		if not re.fullmatch(r'\d+',userid):userid=self.screen_name2userid(userid)
+		
 		dtLatest=datetime.datetime(*timeLatest[0:6]) if timeLatest else None
 		dtOldest=datetime.datetime(*timeOldest[0:6]) if timeOldest else None
 		
 		
 		pp=People(userid,self.session)
-		if not pp.info:
-			if userid not in self.name_map:
-				pass
-				# try: self.followings2name_map(self.me)
-				# except Exception as e: logging.error("followings2name_map failed "+str(e))
-			if userid in self.name_map:
-				userid=self.name_map[userid]
-				pp=People(userid,self.session)
-			if not pp.info:
-				userid=self.screen_name2userid(userid)
-				pp=People(userid,self.session)
-				if not pp.info:
-					logging.error("Can't find user "+backuserid+" or login failed")
-					return []
-					# logging.error("Can't find user "+backuserid+" or login failed, trying to get new cookies")
-					# self.CheckUpdateCookies(self.session)
-					# pp=People(userid,self.session)
-					# if not pp.info:
-						# logging.error("get new cookies failed")
-						# return []
+		
+		print(pp.info)
+		
+		if not pp.info:return []
 		
 		activityList=[]
 		
 		cnt=0
 		for act in pp.activities:
 			try:
+				#print(act['PubTime'],act)
 				entry={
-					'item_id':act['_id'] if '_id' in act else "",
+					'mid':act['mid'] if 'mid' in act else "",
 					'username':pp.info['NickName'] if 'NickName' in pp.info else "",
 					'avatar_url':pp.info['Avatar_url'] if 'Avatar_url' in pp.info else "",
 					'headline':pp.info['BriefIntroduction'] if 'BriefIntroduction' in pp.info else "",
 					'time':transtime(act['PubTime'] if 'PubTime' in act else ""),
 					'actionType':act['ActType'] if 'ActType' in act else "",
 					'summary':formsummary(pp,act),
-					'targetText':act['Content'] if 'Content' in act else "",
+					'targetText':act['Content'] if 'Content' in act else (act['OriginContent'] if 'OriginContent' in act else ""),
 					'topics':[],
-					'source_url':"https://weibo.com/"+("u/" if re.fullmatch(r'\d+',pp.id) else "")+pp.id+"?is_all=1"
+					'source_url':pp.url_activity
 				}
 				if 'ImageUrls' in act: entry['imgs']=act['ImageUrls']
+				elif act['ActType']=="like" and 'OriginImageUrls' in act: entry['imgs']=act['OriginImageUrls']
 				
 				dt=datetime.datetime(*entry['time'][0:6])
 				if dtLatest and dtLatest<dt:continue
@@ -185,14 +152,91 @@ class weibospider(basespider):
 			
 		return activityList
 	
+	def getFollowings(self,userid,count=10):
+		if isinstance(userid,int):userid=str(userid)
+		backuserid=userid
+		if not re.fullmatch(r'\d+',userid):userid=self.screen_name2userid(userid)
+
+		pp=People(userid,self.session)
+		
+		if not pp.info:return []
+		
+		cnt=0
+		for p in pp.followings:
+			yield p[0]
+			cnt+=1
+			if cnt>=count:break
+
+	def getFollowers(self,userid,count=10):
+		if isinstance(userid,int):userid=str(userid)
+		backuserid=userid
+		if not re.fullmatch(r'\d+',userid):userid=self.screen_name2userid(userid)
+
+		pp=People(userid,self.session)
+		
+		if not pp.info:return []
+		
+		cnt=0
+		for p in pp.followers:
+			yield p[0]
+			cnt+=1
+			if cnt>=count:break
+		
+	def putComment(self,comment,mid,token):
+		url="https://api.weibo.com/2/comments/create.json"
+		payload={'access_token':token,'comment':comment,'id':int(mid)}
+		r=requests.post(url,data=payload)
+		
+		if r.status_code!=200:
+			logging.error("putComment status_code=%d"%r.status_code)
+			print(r.json())
+			return False
+		js=r.json()
+		if 'created_at' not in js:
+			return False
+			print(js)
+		return True
+		
+	def checkToken(self,token):
+		url="https://api.weibo.com/oauth2/get_token_info"
+		payload={'access_token':token}
+		r=requests.post(url,data=payload)
+		
+		js=r.json()
+		if r.status_code!=200 or 'error' in js:
+			logging.error("putComment status_code=%d"%r.status_code)
+			print(js)
+			return False
+		
+		expire_in=int(js['expire_in'])
+		if expire_in<=0:return False
+		else:return True
+	
+	def getAuthorizationUrl(self):
+		url="https://api.weibo.com/oauth2/authorize"
+		payload={'client_id':self.spConfig['APP_KEY'],'response_type':'code','redirect_uri':self.spConfig['CALLBACK_URL']}
+		url=url+"?"+"&".join(map(lambda x:x[0]+"="+x[1],payload.items()))
+		return url
+	
+	def getAccessToken(self,code):
+		url="https://api.weibo.com/oauth2/access_token"
+		payload={'client_id':self.spConfig['APP_KEY'],'client_secret':self.spConfig['APP_SECRET'],'grant_type':'authorization_code','code':code,'redirect_uri':self.spConfig['CALLBACK_URL']}
+		r=requests.post(url,data=payload)
+		js=r.json()
+		if "access_token" in js:
+			return js['access_token']
+		else:
+			print(js)
+			return False
+	
 	def screen_name2userid(self,screen_name):
 		url='https://api.weibo.com/2/users/show.json'
 		params={'screen_name':screen_name,'access_token':self.spConfig['access_token']}
 		r=requests.get(url,params=params)
 		if r.status_code!=200: return None
 		else: 
-			self.name_map[screen_name]=str(r.json()['id'])
-			with open(self.friends_file,"wb") as f: pickle.dump(self.name_map,f)
+			#self.name_map[screen_name]=str(r.json()['id'])
+			#with open(self.friends_file,"wb") as f: pickle.dump(self.name_map,f)
 			return str(r.json()['id'])
 
 class People(object):
@@ -201,10 +245,10 @@ class People(object):
 		self._id=id
 		self.session=session
 		
-		self.url_template_activity="https://weibo.cn/u/%s"
-		self.url_template_userinfo="https://weibo.cn/%s/info"
-		self.url_template_following="https://weibo.cn/%s/follow"
-		self.url_template_follower="https://weibo.cn/%s/fans"
+		self.url_template_activity="https://weibo.com/p/100505%s/home?profile_ftype=1&is_all=1"
+		self.url_template_userinfo="https://weibo.com/p/"+strangecode+"%s/info"
+		self.url_template_following="https://weibo.com/p/"+strangecode+"%s/follow"
+		self.url_template_follower="https://weibo.com/p/"+strangecode+"%s/follow?relate=fans"
 		
 		self._Info=None
 	
@@ -217,10 +261,6 @@ class People(object):
 		if isinstance(value,int):value=str(value)
 		if value:
 			self._id=value
-			if re.fullmatch(r'\d+',value):
-				self.url_template_activity="https://weibo.cn/u/%s"
-			else:
-				self.url_template_activity="https://weibo.cn/%s"
 	
 	@property
 	def url_activity(self):
@@ -254,7 +294,9 @@ class People(object):
 		if not self.id or not self.session: return None
 		
 		r=self.session.get(self.url_activity)
-		if r.status_code==200: return parse_tweets(r,self.session)
+		if r.status_code==200: 
+			#with open("AkaisoraTestActPage.html","wb") as f:f.write(r.content)
+			return parse_tweets(r,self.session)
 		else: return None
 
 	@property
