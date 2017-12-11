@@ -98,9 +98,11 @@ class weibospider(basespider):
 			if 'TransFrom' not in act:act['TransFrom']=""
 			
 			if act['ActType']=="origin":
-				return "%s 发表了微博 %s"%(pp.info['NickName'],act['Content'] if len(act['Content'])<30 else act['Content'][:27]+"...")
+				return "%s 发表了微博 | %s"%(pp.info['NickName'],act['Content'])   # if len(act['Content'])<30 else act['Content'][:27]+"...")
 			elif act['ActType']=="trans":
-				return "%s 转发了 %s 的微博 %s"%(pp.info['NickName'],act['TransFrom'],act['OriginContent'] if len(act['OriginContent'])<30 else act['OriginContent'][:27]+"...")
+				return "%s 转发了 %s 的微博 | %s//@%s:%s"%(pp.info['NickName'],act['TransFrom'],act['Content'],act['TransFrom'],act['OriginContent'])   #if len(act['OriginContent'])<30 else act['OriginContent'][:27]+"...")
+			elif act['ActType']=="like":
+				return "%s 赞了 %s 的微博 | %s"%(pp.info['NickName'],act['TransFrom'],act['OriginContent'])   #if len(act['OriginContent'])<30 else act['OriginContent'][:27]+"...")
 			else:
 				return ""
 		
@@ -122,20 +124,21 @@ class weibospider(basespider):
 		cnt=0
 		for act in pp.activities:
 			try:
-				print(act)
+				#print(act['PubTime'],act)
 				entry={
-					'item_id':act['mid'] if 'mid' in act else "",
+					'mid':act['mid'] if 'mid' in act else "",
 					'username':pp.info['NickName'] if 'NickName' in pp.info else "",
 					'avatar_url':pp.info['Avatar_url'] if 'Avatar_url' in pp.info else "",
 					'headline':pp.info['BriefIntroduction'] if 'BriefIntroduction' in pp.info else "",
 					'time':transtime(act['PubTime'] if 'PubTime' in act else ""),
 					'actionType':act['ActType'] if 'ActType' in act else "",
 					'summary':formsummary(pp,act),
-					'targetText':act['Content'] if 'Content' in act else "",
+					'targetText':act['Content'] if 'Content' in act else (act['OriginContent'] if 'OriginContent' in act else ""),
 					'topics':[],
-					'source_url':"https://weibo.com/"+("u/" if re.fullmatch(r'\d+',pp.id) else "")+pp.id+"?is_all=1"
+					'source_url':pp.url_activity
 				}
 				if 'ImageUrls' in act: entry['imgs']=act['ImageUrls']
+				elif act['ActType']=="like" and 'OriginImageUrls' in act: entry['imgs']=act['OriginImageUrls']
 				
 				dt=datetime.datetime(*entry['time'][0:6])
 				if dtLatest and dtLatest<dt:continue
@@ -164,7 +167,7 @@ class People(object):
 		self._id=id
 		self.session=session
 		
-		self.url_template_activity="https://weibo.com/u/%s?is_all=1"
+		self.url_template_activity="https://weibo.com/p/100505%s/home?profile_ftype=1&is_all=1"
 		self.url_template_userinfo="https://weibo.com/p/"+strangecode+"%s/info"
 		self.url_template_following="https://weibo.com/p/"+strangecode+"%s/follow"
 		self.url_template_follower="https://weibo.com/p/"+strangecode+"%s/follow?relate=fans"

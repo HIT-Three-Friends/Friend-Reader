@@ -11,8 +11,8 @@ import logging
 
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer,encoding='gb18030')         #改变标准输出的默认编码
 
-host = "https://weibo.cn"
-pagebar="https://weibo.com/p/aj/v6/mblog/mbloglist?ajwvr=6&domain=100505&profile_ftype=1&is_all=1&pagebar=%d&id=100505%s&feed_type=0&page=%d&pre_page=1"
+host = "https://weibo.com"
+pageBarUrl="https://weibo.com/p/aj/v6/mblog/mbloglist?ajwvr=6&domain=100505&profile_ftype=1&is_all=1&pagebar=%d&pl_name=%s&id=100505%s&script_uri=/p/100505%s/home&feed_type=0&page=%d&pre_page=%d&domain_op=100505"
 
 def parse_information(response,session):
 	""" 抓取个人信息 """
@@ -75,22 +75,25 @@ def parse_information(response,session):
 		
 def parse_tweets(response,session):
 	""" 爬取微博数据"""
-	
+	pageNum=1
+	pagebarNum=-1
 	flagNewPage=True
+	ID = re.search(r"\$CONFIG\['oid'\]='(\d+)'", response.text).group(1)
+	onick=re.search(r"\$CONFIG\['onick'\]='(.+)'", response.text).group(1)
 	while(True):
 		
 		if flagNewPage:
+			logging.debug("get new page")
 			root = html.fromstring(response.text)
 			scriptList=root.xpath("//script")
 			for script in scriptList:
 				if "\"domid\":\"Pl_Official_MyProfileFeed" in script.text:
 					blogs=html.fromstring("<html>"+escapeHtml(eval(re.search(r"FM.view\((.*)\)",script.text).group(1))['html'])+"</html>")
+					plname=re.search(r"Pl_Official_MyProfileFeed__\d+",script.text).group()
 			flagNewPage=False
 		else:
-			print("get page bar")
-		
-		ID = re.search(r"\$CONFIG\['oid'\]='(\d+)'", response.text).group(1)
-		onick=re.search(r"\$CONFIG\['onick'\]='(.+)'", response.text).group(1)
+			logging.debug("get new page bar")
+			blogs=html.fromstring("<html>"+response.json()['data']+"</html>")
 		
 		blogList=blogs.xpath("//div[@action-type='feed_list_item']")
 		for blog in blogList:
@@ -144,10 +147,23 @@ def parse_tweets(response,session):
 			except Exception as e:
 				traceback.print_exc()
 
-		url_next = selector.xpath('body/div[@class="pa" and @id="pagelist"]/form/div/a[text()="下页"]/@href').extract()
-		if not url_next: break
-		response=session.get(url=host + url_next[0])
-		if response.status_code!=200:break
+		url_next=getNextPageUrl(blogs)
+		#print("URL_NEXT==============",url_next)
+		if url_next=="end":
+			break
+		elif url_next:
+			url=host+url_next
+			response=session.get(url=url)
+			pageNum=int(re.search(r"page=(\d+)",url).group(1))
+			pagebarNum=-1
+			flagNewPage=True
+		else:
+			pagebarNum+=1
+			url=pageBarUrl%(pagebarNum,plname,ID,ID,pageNum,pageNum)
+			response=session.get(url=url)
+		
+		if response.status_code!=200:
+			logging.error("gate page data fail "+url)
 
 def parse_followings(response,session):
 	""" 抓取关注人列表 """
@@ -193,6 +209,16 @@ def escapeHtml(ss):
 def sharpContent(ss):
 	ss=ss.replace('\u200b','').replace('\xa0','').strip()
 	return ss
+	
+def getNextPageUrl(blogs):
+	listPage=blogs.xpath(".//div[@node-type='feed_list_page']")
+	if not listPage:return None
+	# print("="*30)
+	# print(etree.tostring(listPage[0]))
+	# print("="*30)
+	nextPage=listPage[0].xpath("./div[@class='W_pages']/a[@class='page next S_txt1 S_line1']/@href")
+	if not nextPage:return "end"
+	return nextPage[0]
 	
 def transtime(timstr):
 	"""2017-12-09 02:34"""
