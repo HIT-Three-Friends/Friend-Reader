@@ -7,7 +7,7 @@ import pickle,logging,re,configparser
 import requests
 from .sp_base import basespider
 from .items import TweetsItem, InformationItem
-from .weibo_parser import *
+from .weibo_parserpc import *
 from .cookies import getCookie
 
 strangecode="100505"
@@ -87,30 +87,8 @@ class weibospider(basespider):
 		def transtime(timstr):
 			lct=time.localtime()
 			try:
-				tim=time.strptime(timstr,"%Y-%m-%d %H:%M:%S")
+				tim=time.strptime(timstr,"%Y-%m-%d %H:%M")
 				return tim
-			except Exception as e:pass
-			try:
-				tim=time.strptime(timstr,"%m月%d日 %H:%M")
-				timstr=timstr+time.strftime("+%Y",lct)
-				tim=time.strptime(timstr,"%m月%d日 %H:%M+%Y")
-				return tim
-			except Exception as e:traceback.print_exc()
-			try:
-				tim=time.strptime(timstr,"今天 %H:%M")
-				timstr=timstr+time.strftime("+%Y,%m,%d",lct)
-				tim=time.strptime(timstr,"今天 %H:%M+%Y,%m,%d")
-				return tim
-			except Exception as e:pass
-			try:
-				deltamin=int(re.fullmatch("(\d{1,2})分钟前",timstr).group(1))
-				tim=datetime.datetime.now()+datetime.timedelta(minutes=-deltamin)
-				return time.localtime(time.mktime(tim.timetuple()))
-			except Exception as e:pass
-			try:
-				deltasec=int(re.fullmatch("(\d{1,2})秒钟前",timstr).group(1))
-				tim=datetime.datetime.now()+datetime.timedelta(seconds=-deltasec)
-				return time.localtime(time.mktime(tim.timetuple()))
 			except Exception as e:pass
 			return time.localtime()
 			
@@ -127,40 +105,26 @@ class weibospider(basespider):
 				return ""
 		
 		if isinstance(userid,int):userid=str(userid)
+		if not re.fullmatch(r'\d+',userid):userid=self.screen_name2userid(userid)
 		backuserid=userid
 		dtLatest=datetime.datetime(*timeLatest[0:6]) if timeLatest else None
 		dtOldest=datetime.datetime(*timeOldest[0:6]) if timeOldest else None
 		
 		
 		pp=People(userid,self.session)
-		if not pp.info:
-			if userid not in self.name_map:
-				pass
-				# try: self.followings2name_map(self.me)
-				# except Exception as e: logging.error("followings2name_map failed "+str(e))
-			if userid in self.name_map:
-				userid=self.name_map[userid]
-				pp=People(userid,self.session)
-			if not pp.info:
-				userid=self.screen_name2userid(userid)
-				pp=People(userid,self.session)
-				if not pp.info:
-					logging.error("Can't find user "+backuserid+" or login failed")
-					return []
-					# logging.error("Can't find user "+backuserid+" or login failed, trying to get new cookies")
-					# self.CheckUpdateCookies(self.session)
-					# pp=People(userid,self.session)
-					# if not pp.info:
-						# logging.error("get new cookies failed")
-						# return []
+		
+		print(pp.info)
+		
+		if not pp.info:return []
 		
 		activityList=[]
 		
 		cnt=0
 		for act in pp.activities:
 			try:
+				print(act)
 				entry={
-					'item_id':act['_id'] if '_id' in act else "",
+					'item_id':act['mid'] if 'mid' in act else "",
 					'username':pp.info['NickName'] if 'NickName' in pp.info else "",
 					'avatar_url':pp.info['Avatar_url'] if 'Avatar_url' in pp.info else "",
 					'headline':pp.info['BriefIntroduction'] if 'BriefIntroduction' in pp.info else "",
@@ -216,10 +180,6 @@ class People(object):
 		if isinstance(value,int):value=str(value)
 		if value:
 			self._id=value
-			if re.fullmatch(r'\d+',value):
-				self.url_template_activity="https://weibo.cn/u/%s"
-			else:
-				self.url_template_activity="https://weibo.cn/%s"
 	
 	@property
 	def url_activity(self):
@@ -244,7 +204,6 @@ class People(object):
 		
 		r=self.session.get(self.url_userinfo)
 		if r.status_code==200:
-			with open("AkaisoraTestInfoPage.html","wb") as f:f.write(r.content)
 			self._Info=parse_information(r,self.session)
 			return self._Info
 		else: return None
@@ -254,7 +213,9 @@ class People(object):
 		if not self.id or not self.session: return None
 		
 		r=self.session.get(self.url_activity)
-		if r.status_code==200: return parse_tweets(r,self.session)
+		if r.status_code==200: 
+			with open("AkaisoraTestActPage.html","wb") as f:f.write(r.content)
+			return parse_tweets(r,self.session)
 		else: return None
 
 	@property
