@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block head %}
-    <title>关注话题设置 - Friend Reader</title>
+    <title>好友兴趣分析 - Friend Reader</title>
     <style>
     .navbar-login
     {
@@ -21,33 +21,7 @@
     {
         font-size: 87px;
     }
-    /* This parent can be any width and height */
-    .block {
-      text-align: center;
-    }
-
-    /* The ghost, nudged to maintain perfect centering */
-    .block:before {
-      content: '';
-      display: inline-block;
-      height: 100%;
-      vertical-align: middle;
-      margin-right: -0.25em; /* Adjusts for spacing */
-    }
-
-    /* The element to be centered, can
-       also be of any width and height */
-    .centered {
-      display: inline-block;
-      vertical-align: middle;
-      width: 50%;
-    }
-    .widget-user-image:hover{
-
-    }
     </style>
-    <link rel="stylesheet" href="/static/css/AdminLTE.min.css"/>
-    <link rel="stylesheet" href="/static/css/_all-skins.min.css"/>
     <script>
 
         window.alert = function(){};
@@ -59,9 +33,14 @@
         $( document ).ready(function() {
         });
     </script>
-    <script src="/static/js/adminlte.min.js"></script>
     <script src="/static/js/current_user.js"></script>
-    <script src="/static/js/config_user/config_user.js"></script>
+    <script src="//www.chartjs.org/dist/2.7.1/Chart.bundle.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.12.4/css/bootstrap-select.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.12.4/js/bootstrap-select.min.js"></script>
+    <script type="text/javascript" src="//cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
+    <script type="text/javascript" src="//cdn.jsdelivr.net/bootstrap.daterangepicker/2/daterangepicker.js"></script>
+    <link rel="stylesheet" type="text/css" href="//cdn.jsdelivr.net/bootstrap.daterangepicker/2/daterangepicker.css" />
+    <script src="/static/js/show_changes/show_changes.js"></script>
 {% endblock %}
 
 {% block body %}
@@ -78,23 +57,22 @@
         <div class="collapse navbar-collapse">
             <ul class="nav navbar-nav">
                 <li><a href="/show/activities">好友动态</a></li>
-                <li class="dropdown">
+                <li class="dropdown active">
                     <a href="#" class="dropdown-toggle" data-toggle="dropdown">动态分析
-                    <span class="caret"></span>
+                        <span class="caret"></span>
                     </a>
                     <ul class="dropdown-menu">
                         <li><a href="/show/vitalities">活跃度分析</a></li>
                         <li><a href="/show/interests">兴趣频率分析</a></li>
-                        <li><a href="/show/changes">兴趣变化分析</a></li>
+                        <li class="active"><a href="/show/changes">兴趣变化分析</a></li>
                     </ul>
                 </li>
                 <li><a href="/show/interactions">互动分析</a></li>
-                <li><a href="#" data-toggle="modal" data-target="#attention-modal" data-name="" data-sex="" data-account0="" data-account1="" data-account2="" data-friendid="">添加话题</a></li>
             </ul>
             <ul class="nav navbar-nav navbar-right">
                 <li class="dropdown">
                     <a href="#" class="dropdown-toggle" data-toggle="dropdown">
-                        <span class="glyphicon glyphicon-user"></span> 
+                        <span class="glyphicon glyphicon-user"></span>
                         <strong id="username">Nombre</strong>
                         <span class="glyphicon glyphicon-chevron-down"></span>
                     </a>
@@ -136,44 +114,32 @@
     </div>
 </div>
 
-    <div class="container" id="body" style="margin-top:100px" >
 
-    <div class="modal fade" id="attention-modal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel">
-      <div class="modal-dialog" role="document">
-        <div class="modal-content">
-          <div class="modal-header">
-            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-            <h4 class="modal-title" id="exampleModalLabel">添加关注话题</h4>
-          </div>
-          <div class="modal-body">
-            <form>
-              <div class="form-group">
-                <label for="tag" class="control-label"></label>
-                <input type="text" class="form-control" id="tag" name="tag">
-              </div>
-            </form>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
-            <button type="button" class="btn btn-primary" id="button-attention">提交</button>
-          </div>
+    <div class="container" style="margin-top:100px">
+        <div style="text-align: center;">
+
+            <select class="selectpicker" id="friendid" data-live-search="true">
+            </select>
+            <select class="selectpicker" id="query-type">
+                <option value="year">按年查询</option>
+                <option value="month">按月查询</option>
+            </select>
+            <select class="selectpicker" id="year">
+
+            </select>
+            <select class="selectpicker" id="month">
+
+            </select>
+            <button class="btn btn-primary" id="button-query">查询</button>
+
         </div>
-      </div>
-    </div>
 
-    <div class="col-lg-3 col-xs-6" id="attention-template" style="display:none">
-        <!-- small box -->
-        <div class="small-box bg-green">
-            <div class="inner">
-                <h3 id="name">53</h3>
-            </div>
-            <div class="icon">
-                <i class="ion ion-stats-bars"></i>
-            </div>
-            <a href="#" class="small-box-footer" id="button-delete"><i class="fa fa-trash-o"></i> 删除话题
-            </a>
+        <div style="width:75%;margin:0 auto">
+            <canvas id="canvas"></canvas>
         </div>
     </div>
 
+    <div class="footer navbar-fixed-bottom" style="background-color:#f39c12;display:none">
+        <div style="text-align: center;"><h3>正在加载，请稍后......</h3></div>
     </div>
 {% endblock %}

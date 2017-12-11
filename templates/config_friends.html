@@ -1,5 +1,249 @@
+{% extends "base.html" %}
+
 {% block head %}
+    <title>关注好友设置 - Friend Reader</title>
+    <style>
+    .navbar-login
+    {
+        width: 305px;
+        padding: 10px;
+        padding-bottom: 0px;
+    }
+
+    .navbar-login-session
+    {
+        padding: 10px;
+        padding-bottom: 0px;
+        padding-top: 0px;
+    }
+
+    .icon-size
+    {
+        font-size: 87px;
+    }
+    /* This parent can be any width and height */
+    .block {
+      text-align: center;
+    }
+
+    /* The ghost, nudged to maintain perfect centering */
+    .block:before {
+      content: '';
+      display: inline-block;
+      height: 100%;
+      vertical-align: middle;
+      margin-right: -0.25em; /* Adjusts for spacing */
+    }
+
+    /* The element to be centered, can
+       also be of any width and height */
+    .centered {
+      display: inline-block;
+      vertical-align: middle;
+      width: 50%;
+    }
+    .widget-user-image:hover{
+
+    }
+    </style>
+    <link rel="stylesheet" href="/static/css/AdminLTE.min.css"/>
+    <link rel="stylesheet" href="/static/css/_all-skins.min.css"/>
+    <script>
+
+        window.alert = function(){};
+        var defaultCSS = document.getElementById('bootstrap-css');
+        function changeCSS(css){
+            if(css) $('head > link').filter(':first').replaceWith('<link rel="stylesheet" href="'+ css +'" type="text/css" />');
+            else $('head > link').filter(':first').replaceWith(defaultCSS);
+        }
+        $( document ).ready(function() {
+        });
+    </script>
+    <script src="/static/js/adminlte.min.js"></script>
+    <script src="/static/js/current_user.js"></script>
+    <script src="/static/js/config_friends/config_friends.js"></script>
 {% endblock %}
 
 {% block body %}
+<div class="navbar navbar-default navbar-fixed-top" role="navigation">
+    <div class="container">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a target="_blank" href="/show" class="navbar-brand">Friend Reader</a>
+        </div>
+        <div class="collapse navbar-collapse">
+            <ul class="nav navbar-nav">
+                <li><a href="/show/activities">好友动态</a></li>
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">动态分析
+                    <span class="caret"></span>
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a href="/show/vitalities">活跃度分析</a></li>
+                        <li><a href="/show/interests">兴趣频率分析</a></li>
+                        <li><a href="/show/changes">兴趣变化分析</a></li>
+                    </ul>
+                </li>
+                <li><a href="/show/interactions">互动分析</a></li>
+                <li><a href="#" data-toggle="modal" data-target="#friend-modal" data-name="" data-sex="" data-account0="" data-account1="" data-account2="" data-friendid="">添加朋友</a></li>
+            </ul>
+            <ul class="nav navbar-nav navbar-right">
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                        <span class="glyphicon glyphicon-user"></span> 
+                        <strong id="username">Nombre</strong>
+                        <span class="glyphicon glyphicon-chevron-down"></span>
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li>
+                            <div class="navbar-login">
+                                <div class="row">
+                                    <div class="col-lg-4">
+                                        <p class="text-center">
+                                            <span class="glyphicon glyphicon-user icon-size"></span>
+                                        </p>
+                                    </div>
+                                    <div class="col-lg-8">
+                                        <p class="text-left"><strong id="name">Nombre Apellido</strong></p>
+                                        <p class="text-left small" id="email">correoElectronico@email.com</p>
+                                        <p class="text-left">
+                                            <a href="/config/user" class="btn btn-primary btn-block btn-sm">设置</a>
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </li>
+                        <li class="divider"></li>
+                        <li>
+                            <div class="navbar-login navbar-login-session">
+                                <div class="row">
+                                    <div class="col-lg-12">
+                                        <p>
+                                            <a href="javascript:void(0)" class="btn btn-danger btn-block" id="button-logout">注销</a>
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+    <div class="container" id="body" style="margin-top:100px" >
+
+
+    <div class="modal fade" id="friend-modal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabe2">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title" id="exampleModalLabe2">修改朋友信息</h4>
+          </div>
+          <div class="modal-body">
+            <form>
+              <div class="form-group" style="display:none">
+                <label for="friendid" class="control-label">朋友ID</label>
+                <input type="text" class="form-control" id="friendid" name="friendid">
+              </div>
+              <div class="form-group">
+                <label for="name" class="control-label">姓名</label>
+                <input type="text" class="form-control" id="name" name="name">
+              </div>
+              <div class="form-group">
+                <label for="sex" class="control-label">性别</label>
+                <select class="form-control" id="sex" name="sex">
+                    <option value="0">男</option>
+                    <option value="1">女</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="account0" class="control-label">知乎账号</label>
+                <input type="text" class="form-control" id="account0" name="account0">
+              </div>
+              <div class="form-group">
+                <label for="account1" class="control-label">微博账号</label>
+                <input type="text" class="form-control" id="account1" name="account1">
+              </div>
+              <div class="form-group">
+                <label for="account2" class="control-label">GitHub账号</label>
+                <input type="text" class="form-control" id="account2" name="account2">
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+            <button type="button" class="btn btn-primary" id="button-friend">提交</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal fade" id="avatar-modal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title" id="exampleModalLabel">修改好友头像</h4>
+          </div>
+          <div class="modal-body">
+            <form>
+              <div class="form-group" style="display:none">
+                <label for="friendid" class="control-label"></label>
+                <input type="text" class="form-control" id="friendid" name="friendid">
+              </div>
+              <div class="form-group">
+                <label for="avatar" class="control-label">头像文件</label>
+                <input type="file" class="form-control" id="avatar" name="avatar">
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+            <button type="button" class="btn btn-primary" id="button-avatar">提交</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+        <form class="fade" action="/friends/id" method="POST" enctype="multipart/form-data" id="hidden-form">
+            {% csrf_token %}
+            <input type="file" id="avatar" name="avatar">
+        </form>
+        <iframe style="display:none" id="hidden-frame" src="/static/hidden_form.html">
+        </iframe>
+
+
+    <div class="col-md-4" style="display:none" id="friend-template">
+          <!-- Widget: user widget style 1 -->
+          <div class="box box-widget widget-user-2">
+            <!-- Add the bg color to the header using any of the bg-* classes -->
+            <div class="widget-user-header bg-yellow">
+              <div class="widget-user-image">
+                <img class="img-circle" src="/media/upload/kugwzk.bmp" id="avatar" data-toggle="modal" data-target="#avatar-modal">
+              </div>
+              <!-- /.widget-user-image -->
+                <h3 class="widget-user-username"><a id="name" href="#" style="color:white"></a></h3>
+                <h5 class="widget-user-desc"><img id="sex" style="height:18px;display:inline"></h5>
+            </div>
+            <div class="box-footer no-padding">
+              <ul class="nav nav-stacked">
+                <li><a href="#" id="url0">知乎账号 <span class="pull-right badge bg-blue" id="id0">未指定</span></a></li>
+                <li><a href="#" id="url1">微博账号 <span class="pull-right badge bg-aqua" id="id1">未指定</span></a></li>
+                <li><a href="#" id="url2">GitHub账号 <span class="pull-right badge bg-green" id="id2">未指定</span></a></li>
+                <li><a href="#">活跃度 <span class="pull-right badge bg-red" id="vitality">842</span></a></li>
+                <li><a href="#" id="button-modify" data-toggle="modal" data-target="#friend-modal" data-name="" data-sex="" data-account0="" data-account1="" data-account2="">修改 <span class="pull-right badge bg-purple"></span></a></li>
+                <li><a href="#" id="button-delete">删除 <span class="pull-right badge bg-purple"></span></a></li>
+              </ul>
+            </div>
+          </div>
+          <!-- /.widget-user -->
+    </div>
+    </div>
 {% endblock %}
