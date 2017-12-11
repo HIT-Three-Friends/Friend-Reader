@@ -54,6 +54,7 @@ urlpatterns = [
     url(r'^interest/(\d+)/$',backend_views.interests,name = 'act5'),
     url(r'^interest/(\d+)/months/$',backend_views.interestmonth,name = 'act6'),
     url(r'^interest/(\d+)/years/$',backend_views.interestyear,name = 'act7'),
+    url(r'^interaction/(\d+)/$',backend_views.interaction,name = 'act8'),
 
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)\
               + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

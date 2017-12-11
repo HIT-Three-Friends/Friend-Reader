@@ -284,13 +284,13 @@ def asocial(request,friendid,socialid):
 
 def dt_to_t(newdatetime):
     c = newdatetime.strftime("%a %b %d %H:%M:%S %Y")
-    c = c + " UTC"
-    return time.strptime(c,"%a %b %d %H:%M:%S %Y %Z")
+    c = c + " UTC +0000"
+    return time.strptime(c,"%a %b %d %H:%M:%S %Y %Z %z")
 
 def t_to_dt(newtime):
     c = time.strftime("%a %b %d %H:%M:%S %Y",newtime)
-    c = c + " UTC"
-    return datetime.strptime(c, "%a %b %d %H:%M:%S %Y %Z")
+    c = c + " UTC +0000"
+    return datetime.strptime(c,"%a %b %d %H:%M:%S %Y %Z %z")
 
 #刷新id好友的所有动态
 def refreshfriend(id):
@@ -347,6 +347,9 @@ def refreshsocial(id,socialid):
             if act['topics'] == []:
                 act['topics'] = gettopic(act['targetText'] + " "+act['summary'],ac['account'])
             addmylove(act, ac['id'])
+            if socialid == 1 and 'comments' in act :
+                for cc in act['comments']:
+                    addloveme(ac['id'],cc['commentNickName'],cc['commentContent'],act['topics'])
             for top in act['topics']:
                 findtop = focus.objects.filter(father=father['user'], tag=top)
                 if findtop:
@@ -393,6 +396,9 @@ def initact(id,socialid):
         if act['topics']==[]:
             act['topics'] = gettopic(act['targetText'] + " "+act['summary'],ac['account'])
         addmylove(act,ac['id'])
+        if socialid == 1 and 'comments' in act:
+            for cc in act['comments']:
+                addloveme(ac['id'], cc['commentNickName'], cc['commentContent'], act['topics'])
         for top in act['topics']:
             topic.objects.create(father=newact, topics=top)
     return
@@ -765,7 +771,7 @@ def initfriendfriend(friendid,socialid):
     for love in lovelove:
         loveinfo = friendfriend.objects.filter(father = myid['id'],account=love) #检测关系数据是否存在
         if loveinfo: # 老的好友
-            #continue
+            continue
             #oldfriendfriend()
             # 爬 动态
             tloved = 0.0 # 你得好友被互动次数 = 0
@@ -794,7 +800,7 @@ def initfriendfriend(friendid,socialid):
             # 数据库新建
             # 爬 动态
             newf = friendfriend.objects.create(father=myid['id'], account=love,time=datetime.now())
-            #continue
+            continue
             ans = client.getActivities(love, plat[socialid], 100)
             tloved = 0.0
             for act in ans :
@@ -815,6 +821,35 @@ def initfriendfriend(friendid,socialid):
             newf.update(loved = tloved)
     return
 
+#被主动
+def addloveme(socialtid,account,cc,tag):
+    ffll = friendfriend.objects.filter(father=socialtid,account=account)
+    if ffll:
+        fff = list(friendfriend.objects.filter(father=socialtid,account=account).values('id', 'loved', 'love', 'account'))[0]
+        cc = gettopic(cc)
+        L = len(cc) + len(tag)
+        for tt in tag:
+            ttinfo = friendtopic.objects.filter(father=fff['id'], topics=tt)  # 检查互动主题是否存在
+            # 计数互动主题
+            if ttinfo:
+                pp = list(ttinfo.values('pp'))[0]
+                ttinfo.update(pp=pp['pp'] + 1.0 / L)
+            else:
+                friendtopic.objects.create(father=fff['id'], topics=tt, pp=1.0 / L)
+        for tt in cc:
+            ttinfo = friendtopic.objects.filter(father=fff['id'], topics=tt)  # 检查互动主题是否存在
+            # 计数互动主题
+            if ttinfo:
+                pp = list(ttinfo.values('pp'))[0]
+                ttinfo.update(pp=pp['pp'] + 1.0 / L)
+            else:
+                friendtopic.objects.create(father=fff['id'], topics=tt, pp=1.0 / L)
+        # 更新 关系数据
+        friendfriend.objects.filter(father=socialtid, account=fff['account']).update(love=fff['love'] + 1)
+    return
+
+
+#我主动互动
 def addmylove(act,socialtid):
     ffll = friendfriend.objects.filter(father=socialtid)#你的好友账号的 所有好友 的 关系数据
     if ffll:
