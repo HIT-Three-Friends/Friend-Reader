@@ -107,8 +107,9 @@ class weibospider(basespider):
 				return ""
 		
 		if isinstance(userid,int):userid=str(userid)
-		if not re.fullmatch(r'\d+',userid):userid=self.screen_name2userid(userid)
 		backuserid=userid
+		if not re.fullmatch(r'\d+',userid):userid=self.screen_name2userid(userid)
+		
 		dtLatest=datetime.datetime(*timeLatest[0:6]) if timeLatest else None
 		dtOldest=datetime.datetime(*timeOldest[0:6]) if timeOldest else None
 		
@@ -150,6 +151,38 @@ class weibospider(basespider):
 				logging.error("getActivities of "+backuserid+" failed")
 			
 		return activityList
+	
+	def getFollowings(self,userid,count=10):
+		if isinstance(userid,int):userid=str(userid)
+		backuserid=userid
+		if not re.fullmatch(r'\d+',userid):userid=self.screen_name2userid(userid)
+
+		pp=People(userid,self.session)
+		
+		if not pp.info:return []
+		
+		cnt=0
+		for p in pp.followings:
+			yield p[0]
+			cnt+=1
+			if cnt>=count:break
+
+	def getFollowers(self,userid,count=10):
+		if isinstance(userid,int):userid=str(userid)
+		backuserid=userid
+		if not re.fullmatch(r'\d+',userid):userid=self.screen_name2userid(userid)
+
+		pp=People(userid,self.session)
+		
+		if not pp.info:return []
+		
+		cnt=0
+		for p in pp.followers:
+			yield p[0]
+			cnt+=1
+			if cnt>=count:break
+		
+		
 	
 	def screen_name2userid(self,screen_name):
 		url='https://api.weibo.com/2/users/show.json'
@@ -217,7 +250,7 @@ class People(object):
 		
 		r=self.session.get(self.url_activity)
 		if r.status_code==200: 
-			with open("AkaisoraTestActPage.html","wb") as f:f.write(r.content)
+			#with open("AkaisoraTestActPage.html","wb") as f:f.write(r.content)
 			return parse_tweets(r,self.session)
 		else: return None
 

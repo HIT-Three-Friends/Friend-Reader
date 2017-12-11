@@ -168,18 +168,23 @@ def parse_tweets(response,session):
 def parse_followings(response,session):
 	""" 抓取关注人列表 """
 	while(True):
-		selector = Selector(response)
-		peoples = selector.xpath('body/table/tr/td[2]/a[1]')
-		for people in peoples:
+	
+		root = html.fromstring(response.text)
+		scriptList=root.xpath("//script")
+		for script in scriptList:
+			if "\"domid\":\"Pl_Official_HisRelation__" in script.text:
+				peoples=html.fromstring("<html>"+escapeHtml(eval(re.search(r"FM.view\((.*)\)",script.text).group(1))['html'])+"</html>")
+	
+		peopleList = peoples.xpath(".//ul[@class='follow_list']/li")
+		for people in peopleList:
 			try:
-				screen_name=people.xpath('text()').extract()[0]
-				id_url=people.xpath('@href').extract()[0]
-				id=re.search(r'(?<=/)[^/]*$',id_url).group()
+				screen_name=people.xpath(".//a[@usercard]/text()")[0]
+				id=re.search(r"uid=(\d+)",people.xpath("@action-data")[0]).group(1)
 				yield (screen_name,id)
 			except Exception as e:
 				logging.warning(str(e))
 
-		url_next = selector.xpath('body/div[@class="pa" and @id="pagelist"]/form/div/a[text()="下页"]/@href').extract()
+		url_next = peoples.xpath(".//div[@class='W_pages']//a[@class='page next S_txt1 S_line1']/@href")
 		if not url_next: break
 		response=session.get(url=host + url_next[0])
 		if response.status_code!=200:break
@@ -187,18 +192,23 @@ def parse_followings(response,session):
 def parse_followers(response,session):
 	""" 抓取粉丝列表 """
 	while(True):
-		selector = Selector(response)
-		peoples = selector.xpath('body/table/tr/td[2]/a[1]')
-		for people in peoples:
+	
+		root = html.fromstring(response.text)
+		scriptList=root.xpath("//script")
+		for script in scriptList:
+			if "\"domid\":\"Pl_Official_HisRelation__" in script.text:
+				peoples=html.fromstring("<html>"+escapeHtml(eval(re.search(r"FM.view\((.*)\)",script.text).group(1))['html'])+"</html>")
+	
+		peopleList = peoples.xpath(".//ul[@class='follow_list']/li")
+		for people in peopleList:
 			try:
-				screen_name=people.xpath('text()').extract()[0]
-				id_url=people.xpath('@href').extract()[0]
-				id=re.search(r'(?<=/)[^/]*$',id_url).group()
+				screen_name=people.xpath(".//a[@usercard]/text()")[0]
+				id=re.search(r"uid=(\d+)",people.xpath("@action-data")[0]).group(1)
 				yield (screen_name,id)
 			except Exception as e:
 				logging.warning(str(e))
 
-		url_next = selector.xpath('body/div[@class="pa" and @id="pagelist"]/form/div/a[text()="下页"]/@href').extract()
+		url_next = peoples.xpath(".//div[@class='W_pages']//a[@class='page next S_txt1 S_line1']/@href")
 		if not url_next: break
 		response=session.get(url=host + url_next[0])
 		if response.status_code!=200:break
