@@ -38,9 +38,8 @@ class allactivity(models.Model):
     source_url = models.CharField(max_length = 300)
 
 class focus(models.Model):
-    father = models.IntegerField(default=0)
-    platform = models.IntegerField(default=0)
-    account = models.CharField(max_length = 30)
+    father = models.CharField(max_length = 300)
+    tag = models.CharField(max_length = 300,default='软件工程')
 
 class pics(models.Model):
     father = models.IntegerField(default=0)
@@ -55,6 +54,16 @@ class Picture(models.Model):
     user = models.IntegerField(default=0)
     image = models.ImageField(null=True, blank=True, upload_to="upload")
 
+class friendfriend(models.Model):
+    father = models.IntegerField(default=0)
+    account = models.CharField(max_length=300)
+    time = models.DateTimeField(default = timezone.now)
+    loved = models.FloatField(default=0.0)
+    love = models.FloatField(default=0.0)
 
+class friendtopic(models.Model):
+    father = models.IntegerField(default = 0)
+    topics = models.CharField(max_length=300)
+    pp = models.FloatField(default=0.0)
 
 # Create your models here.

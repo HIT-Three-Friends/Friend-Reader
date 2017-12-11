@@ -15,17 +15,16 @@ function render_bar(data) {
         rate.push(data[i][1]);
     }
     var color = Chart.helpers.color;
-        var barChartData = {
-            labels: labels,
-            datasets: [{
-                label: '兴趣',
-                backgroundColor: color(window.chartColors.red).alpha(0.5).rgbString(),
-                borderColor: window.chartColors.red,
-                borderWidth: 1,
-                data: rate
-            }]
-
-        };
+    var barChartData = {
+        labels: labels,
+        datasets: [{
+            label: '兴趣',
+            backgroundColor: color(window.chartColors.red).alpha(0.5).rgbString(),
+            borderColor: window.chartColors.red,
+            borderWidth: 1,
+            data: rate
+        }]
+    };
     if (window.myBar != null)
         window.myBar.destroy();
     var ctx = document.getElementById("canvas").getContext("2d");

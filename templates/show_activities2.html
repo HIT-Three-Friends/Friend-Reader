@@ -1,0 +1,750 @@
+{% extends "base.html" %}
+
+{% block head %}
+    <title>好友动态 - Friend Reader</title>
+    <style>
+    .navbar-login
+    {
+        width: 305px;
+        padding: 10px;
+        padding-bottom: 0px;
+    }
+
+    .navbar-login-session
+    {
+        padding: 10px;
+        padding-bottom: 0px;
+        padding-top: 0px;
+    }
+
+    .icon-size
+    {
+        font-size: 87px;
+    }
+    </style>
+    <script>
+
+        window.alert = function(){};
+        var defaultCSS = document.getElementById('bootstrap-css');
+        function changeCSS(css){
+            if(css) $('head > link').filter(':first').replaceWith('<link rel="stylesheet" href="'+ css +'" type="text/css" />');
+            else $('head > link').filter(':first').replaceWith(defaultCSS);
+        }
+        $( document ).ready(function() {
+        });
+    </script>
+    <link rel="stylesheet" href="/static/css/AdminLTE.min.css"/>
+    <link rel="stylesheet" href="/static/css/_all-skins.min.css"/>
+    <script src="/static/js/current_user.js"></script>
+    <script src="/static/js/adminlte.min.js"></script>
+    <script src="/static/js/show_activities/show_activities.js"></script>
+{% endblock %}
+
+{% block body %}
+    <div class="navbar navbar-default navbar-fixed-top" role="navigation">
+        <div class="container">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a target="_blank" href="/show" class="navbar-brand">Friend Reader</a>
+            </div>
+            <div class="collapse navbar-collapse">
+                <ul class="nav navbar-nav">
+                    <li class="active"><a href="/show/activities">好友动态</a></li>
+                    <li class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">动态分析
+                        <span class="caret"></span>
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a href="/show/vitalities">活跃度分析</a></li>
+                            <li><a href="/show/interests">兴趣频率分析</a></li>
+                            <li><a href="/show/changes">兴趣变化分析</a></li>
+                        </ul>
+                    </li>
+                    <li><a id="button-refresh" style="cursor:pointer">刷新动态</a></li>
+                </ul>
+                <ul class="nav navbar-nav navbar-right">
+                    <li class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                            <span class="glyphicon glyphicon-user"></span> 
+                            <strong id="username">Nombre</strong>
+                            <span class="glyphicon glyphicon-chevron-down"></span>
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li>
+                                <div class="navbar-login">
+                                    <div class="row">
+                                        <div class="col-lg-4">
+                                            <p class="text-center">
+                                                <span class="glyphicon glyphicon-user icon-size"></span>
+                                            </p>
+                                        </div>
+                                        <div class="col-lg-8">
+                                            <p class="text-left"><strong id="name">Nombre Apellido</strong></p>
+                                            <p class="text-left small" id="email">correoElectronico@email.com</p>
+                                            <p class="text-left">
+                                                <a href="/config/user" class="btn btn-primary btn-block btn-sm">设置</a>
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </li>
+                            <li class="divider"></li>
+                            <li>
+                                <div class="navbar-login navbar-login-session">
+                                    <div class="row">
+                                        <div class="col-lg-12">
+                                            <p>
+                                                <a href="javascript:void(0)" class="btn btn-danger btn-block" id="button-logout">注销</a>
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="container" style="margin-top:100px" id="cnt">
+        <ul class="timeline" id="timeline">
+
+            <!-- timeline time label -->
+            <li class="time-label" style="display:none" id="time-template">
+                <span class="bg-red" id="time"></span>
+            </li>
+            <!-- /.timeline-label -->
+
+            <!-- timeline item -->
+            <li style="display:none" id="event-template">
+                <!-- timeline icon -->
+                <img src="/media/upload/233.png" width="40px" class="img-circle" style="display:inline" id="avatar">
+                <div class="timeline-item">
+                    <span class="time"><i class="fa fa-clock-o"></i><span id="event-time"> 12:05</span></span>
+
+                    <h3 class="timeline-header"><a href="#" id="name">汪泽堃</a> <span id="title">kugwzk回答了<strong>ACM的含金量真的在下降吗</strong></span></h3>
+
+                    <div class="timeline-body" id="word" style="overflow:hidden;max-height:200px;cursor:pointer">
+                        我都没拿金牌，你还说含金量低
+                    </div>
+
+                    <div class="timeline-footer">
+                        <a class="btn btn-primary btn-xs" id="url" target="_blank">原文链接</a>
+                    </div>
+                </div>
+            </li>
+            <!-- END timeline item -->
+
+
+        </ul>
+
+    </div>
+    <div class="footer navbar-fixed-bottom" style="background-color:#f39c12;display:none">
+        <div style="text-align: center;"><h3>正在加载，请稍后......</h3></div>
+    </div>
+{% endblock %}
+{% extends "base.html" %}
+
+{% block head %}
+    <title>好友动态 - Friend Reader</title>
+    <style>
+    .navbar-login
+    {
+        width: 305px;
+        padding: 10px;
+        padding-bottom: 0px;
+    }
+
+    .navbar-login-session
+    {
+        padding: 10px;
+        padding-bottom: 0px;
+        padding-top: 0px;
+    }
+
+    .icon-size
+    {
+        font-size: 87px;
+    }
+    </style>
+    <script>
+
+        window.alert = function(){};
+        var defaultCSS = document.getElementById('bootstrap-css');
+        function changeCSS(css){
+            if(css) $('head > link').filter(':first').replaceWith('<link rel="stylesheet" href="'+ css +'" type="text/css" />');
+            else $('head > link').filter(':first').replaceWith(defaultCSS);
+        }
+        $( document ).ready(function() {
+        });
+    </script>
+    <link rel="stylesheet" href="/static/css/AdminLTE.min.css"/>
+    <link rel="stylesheet" href="/static/css/_all-skins.min.css"/>
+    <script src="/static/js/current_user.js"></script>
+    <script src="/static/js/adminlte.min.js"></script>
+    <script src="/static/js/show_activities/show_activities.js"></script>
+{% endblock %}
+
+{% block body %}
+    <div class="navbar navbar-default navbar-fixed-top" role="navigation">
+        <div class="container">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a target="_blank" href="/show" class="navbar-brand">Friend Reader</a>
+            </div>
+            <div class="collapse navbar-collapse">
+                <ul class="nav navbar-nav">
+                    <li class="active"><a href="/show/activities">好友动态</a></li>
+                    <li class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">动态分析
+                        <span class="caret"></span>
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a href="/show/vitalities">活跃度分析</a></li>
+                            <li><a href="/show/interests">兴趣频率分析</a></li>
+                            <li><a href="/show/changes">兴趣变化分析</a></li>
+                        </ul>
+                    </li>
+                    <li><a id="button-refresh" style="cursor:pointer">刷新动态</a></li>
+                </ul>
+                <ul class="nav navbar-nav navbar-right">
+                    <li class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                            <span class="glyphicon glyphicon-user"></span> 
+                            <strong id="username">Nombre</strong>
+                            <span class="glyphicon glyphicon-chevron-down"></span>
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li>
+                                <div class="navbar-login">
+                                    <div class="row">
+                                        <div class="col-lg-4">
+                                            <p class="text-center">
+                                                <span class="glyphicon glyphicon-user icon-size"></span>
+                                            </p>
+                                        </div>
+                                        <div class="col-lg-8">
+                                            <p class="text-left"><strong id="name">Nombre Apellido</strong></p>
+                                            <p class="text-left small" id="email">correoElectronico@email.com</p>
+                                            <p class="text-left">
+                                                <a href="/config/user" class="btn btn-primary btn-block btn-sm">设置</a>
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </li>
+                            <li class="divider"></li>
+                            <li>
+                                <div class="navbar-login navbar-login-session">
+                                    <div class="row">
+                                        <div class="col-lg-12">
+                                            <p>
+                                                <a href="javascript:void(0)" class="btn btn-danger btn-block" id="button-logout">注销</a>
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="container" style="margin-top:100px" id="cnt">
+        <ul class="timeline" id="timeline">
+
+            <!-- timeline time label -->
+            <li class="time-label" style="display:none" id="time-template">
+                <span class="bg-red" id="time"></span>
+            </li>
+            <!-- /.timeline-label -->
+
+            <!-- timeline item -->
+            <li style="display:none" id="event-template">
+                <!-- timeline icon -->
+                <img src="/media/upload/233.png" width="40px" class="img-circle" style="display:inline" id="avatar">
+                <div class="timeline-item">
+                    <span class="time"><i class="fa fa-clock-o"></i><span id="event-time"> 12:05</span></span>
+
+                    <h3 class="timeline-header"><a href="#" id="name">汪泽堃</a> <span id="title">kugwzk回答了<strong>ACM的含金量真的在下降吗</strong></span></h3>
+
+                    <div class="timeline-body" id="word" style="overflow:hidden;max-height:200px;cursor:pointer">
+                        我都没拿金牌，你还说含金量低
+                    </div>
+
+                    <div class="timeline-footer">
+                        <a class="btn btn-primary btn-xs" id="url" target="_blank">原文链接</a>
+                    </div>
+                </div>
+            </li>
+            <!-- END timeline item -->
+
+
+        </ul>
+
+    </div>
+    <div class="footer navbar-fixed-bottom" style="background-color:#f39c12;display:none">
+        <div style="text-align: center;"><h3>正在加载，请稍后......</h3></div>
+    </div>
+{% endblock %}
+{% extends "base.html" %}
+
+{% block head %}
+    <title>好友动态 - Friend Reader</title>
+    <style>
+    .navbar-login
+    {
+        width: 305px;
+        padding: 10px;
+        padding-bottom: 0px;
+    }
+
+    .navbar-login-session
+    {
+        padding: 10px;
+        padding-bottom: 0px;
+        padding-top: 0px;
+    }
+
+    .icon-size
+    {
+        font-size: 87px;
+    }
+    </style>
+    <script>
+
+        window.alert = function(){};
+        var defaultCSS = document.getElementById('bootstrap-css');
+        function changeCSS(css){
+            if(css) $('head > link').filter(':first').replaceWith('<link rel="stylesheet" href="'+ css +'" type="text/css" />');
+            else $('head > link').filter(':first').replaceWith(defaultCSS);
+        }
+        $( document ).ready(function() {
+        });
+    </script>
+    <link rel="stylesheet" href="/static/css/AdminLTE.min.css"/>
+    <link rel="stylesheet" href="/static/css/_all-skins.min.css"/>
+    <script src="/static/js/current_user.js"></script>
+    <script src="/static/js/adminlte.min.js"></script>
+    <script src="/static/js/show_activities/show_activities.js"></script>
+{% endblock %}
+
+{% block body %}
+    <div class="navbar navbar-default navbar-fixed-top" role="navigation">
+        <div class="container">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a target="_blank" href="/show" class="navbar-brand">Friend Reader</a>
+            </div>
+            <div class="collapse navbar-collapse">
+                <ul class="nav navbar-nav">
+                    <li class="active"><a href="/show/activities">好友动态</a></li>
+                    <li class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">动态分析
+                        <span class="caret"></span>
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a href="/show/vitalities">活跃度分析</a></li>
+                            <li><a href="/show/interests">兴趣频率分析</a></li>
+                            <li><a href="/show/changes">兴趣变化分析</a></li>
+                        </ul>
+                    </li>
+                    <li><a id="button-refresh" style="cursor:pointer">刷新动态</a></li>
+                </ul>
+                <ul class="nav navbar-nav navbar-right">
+                    <li class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                            <span class="glyphicon glyphicon-user"></span> 
+                            <strong id="username">Nombre</strong>
+                            <span class="glyphicon glyphicon-chevron-down"></span>
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li>
+                                <div class="navbar-login">
+                                    <div class="row">
+                                        <div class="col-lg-4">
+                                            <p class="text-center">
+                                                <span class="glyphicon glyphicon-user icon-size"></span>
+                                            </p>
+                                        </div>
+                                        <div class="col-lg-8">
+                                            <p class="text-left"><strong id="name">Nombre Apellido</strong></p>
+                                            <p class="text-left small" id="email">correoElectronico@email.com</p>
+                                            <p class="text-left">
+                                                <a href="/config/user" class="btn btn-primary btn-block btn-sm">设置</a>
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </li>
+                            <li class="divider"></li>
+                            <li>
+                                <div class="navbar-login navbar-login-session">
+                                    <div class="row">
+                                        <div class="col-lg-12">
+                                            <p>
+                                                <a href="javascript:void(0)" class="btn btn-danger btn-block" id="button-logout">注销</a>
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="container" style="margin-top:100px" id="cnt">
+        <ul class="timeline" id="timeline">
+
+            <!-- timeline time label -->
+            <li class="time-label" style="display:none" id="time-template">
+                <span class="bg-red" id="time"></span>
+            </li>
+            <!-- /.timeline-label -->
+
+            <!-- timeline item -->
+            <li style="display:none" id="event-template">
+                <!-- timeline icon -->
+                <img src="/media/upload/233.png" width="40px" class="img-circle" style="display:inline" id="avatar">
+                <div class="timeline-item">
+                    <span class="time"><i class="fa fa-clock-o"></i><span id="event-time"> 12:05</span></span>
+
+                    <h3 class="timeline-header"><a href="#" id="name">汪泽堃</a> <span id="title">kugwzk回答了<strong>ACM的含金量真的在下降吗</strong></span></h3>
+
+                    <div class="timeline-body" id="word" style="overflow:hidden;max-height:200px;cursor:pointer">
+                        我都没拿金牌，你还说含金量低
+                    </div>
+
+                    <div class="timeline-footer">
+                        <a class="btn btn-primary btn-xs" id="url" target="_blank">原文链接</a>
+                    </div>
+                </div>
+            </li>
+            <!-- END timeline item -->
+
+
+        </ul>
+
+    </div>
+    <div class="footer navbar-fixed-bottom" style="background-color:#f39c12;display:none">
+        <div style="text-align: center;"><h3>正在加载，请稍后......</h3></div>
+    </div>
+{% endblock %}
+{% extends "base.html" %}
+
+{% block head %}
+    <title>好友动态 - Friend Reader</title>
+    <style>
+    .navbar-login
+    {
+        width: 305px;
+        padding: 10px;
+        padding-bottom: 0px;
+    }
+
+    .navbar-login-session
+    {
+        padding: 10px;
+        padding-bottom: 0px;
+        padding-top: 0px;
+    }
+
+    .icon-size
+    {
+        font-size: 87px;
+    }
+    </style>
+    <script>
+
+        window.alert = function(){};
+        var defaultCSS = document.getElementById('bootstrap-css');
+        function changeCSS(css){
+            if(css) $('head > link').filter(':first').replaceWith('<link rel="stylesheet" href="'+ css +'" type="text/css" />');
+            else $('head > link').filter(':first').replaceWith(defaultCSS);
+        }
+        $( document ).ready(function() {
+        });
+    </script>
+    <link rel="stylesheet" href="/static/css/AdminLTE.min.css"/>
+    <link rel="stylesheet" href="/static/css/_all-skins.min.css"/>
+    <script src="/static/js/current_user.js"></script>
+    <script src="/static/js/adminlte.min.js"></script>
+    <script src="/static/js/show_activities/show_activities.js"></script>
+{% endblock %}
+
+{% block body %}
+    <div class="navbar navbar-default navbar-fixed-top" role="navigation">
+        <div class="container">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a target="_blank" href="/show" class="navbar-brand">Friend Reader</a>
+            </div>
+            <div class="collapse navbar-collapse">
+                <ul class="nav navbar-nav">
+                    <li class="active"><a href="/show/activities">好友动态</a></li>
+                    <li class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">动态分析
+                        <span class="caret"></span>
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a href="/show/vitalities">活跃度分析</a></li>
+                            <li><a href="/show/interests">兴趣频率分析</a></li>
+                            <li><a href="/show/changes">兴趣变化分析</a></li>
+                        </ul>
+                    </li>
+                    <li><a id="button-refresh" style="cursor:pointer">刷新动态</a></li>
+                </ul>
+                <ul class="nav navbar-nav navbar-right">
+                    <li class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                            <span class="glyphicon glyphicon-user"></span> 
+                            <strong id="username">Nombre</strong>
+                            <span class="glyphicon glyphicon-chevron-down"></span>
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li>
+                                <div class="navbar-login">
+                                    <div class="row">
+                                        <div class="col-lg-4">
+                                            <p class="text-center">
+                                                <span class="glyphicon glyphicon-user icon-size"></span>
+                                            </p>
+                                        </div>
+                                        <div class="col-lg-8">
+                                            <p class="text-left"><strong id="name">Nombre Apellido</strong></p>
+                                            <p class="text-left small" id="email">correoElectronico@email.com</p>
+                                            <p class="text-left">
+                                                <a href="/config/user" class="btn btn-primary btn-block btn-sm">设置</a>
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </li>
+                            <li class="divider"></li>
+                            <li>
+                                <div class="navbar-login navbar-login-session">
+                                    <div class="row">
+                                        <div class="col-lg-12">
+                                            <p>
+                                                <a href="javascript:void(0)" class="btn btn-danger btn-block" id="button-logout">注销</a>
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="container" style="margin-top:100px" id="cnt">
+        <ul class="timeline" id="timeline">
+
+            <!-- timeline time label -->
+            <li class="time-label" style="display:none" id="time-template">
+                <span class="bg-red" id="time"></span>
+            </li>
+            <!-- /.timeline-label -->
+
+            <!-- timeline item -->
+            <li style="display:none" id="event-template">
+                <!-- timeline icon -->
+                <img src="/media/upload/233.png" width="40px" class="img-circle" style="display:inline" id="avatar">
+                <div class="timeline-item">
+                    <span class="time"><i class="fa fa-clock-o"></i><span id="event-time"> 12:05</span></span>
+
+                    <h3 class="timeline-header"><a href="#" id="name">汪泽堃</a> <span id="title">kugwzk回答了<strong>ACM的含金量真的在下降吗</strong></span></h3>
+
+                    <div class="timeline-body" id="word" style="overflow:hidden;max-height:200px;cursor:pointer">
+                        我都没拿金牌，你还说含金量低
+                    </div>
+
+                    <div class="timeline-footer">
+                        <a class="btn btn-primary btn-xs" id="url" target="_blank">原文链接</a>
+                    </div>
+                </div>
+            </li>
+            <!-- END timeline item -->
+
+
+        </ul>
+
+    </div>
+    <div class="footer navbar-fixed-bottom" style="background-color:#f39c12;display:none">
+        <div style="text-align: center;"><h3>正在加载，请稍后......</h3></div>
+    </div>
+{% endblock %}
+{% extends "base.html" %}
+
+{% block head %}
+    <title>好友动态 - Friend Reader</title>
+    <style>
+    .navbar-login
+    {
+        width: 305px;
+        padding: 10px;
+        padding-bottom: 0px;
+    }
+
+    .navbar-login-session
+    {
+        padding: 10px;
+        padding-bottom: 0px;
+        padding-top: 0px;
+    }
+
+    .icon-size
+    {
+        font-size: 87px;
+    }
+    </style>
+    <script>
+
+        window.alert = function(){};
+        var defaultCSS = document.getElementById('bootstrap-css');
+        function changeCSS(css){
+            if(css) $('head > link').filter(':first').replaceWith('<link rel="stylesheet" href="'+ css +'" type="text/css" />');
+            else $('head > link').filter(':first').replaceWith(defaultCSS);
+        }
+        $( document ).ready(function() {
+        });
+    </script>
+    <link rel="stylesheet" href="/static/css/AdminLTE.min.css"/>
+    <link rel="stylesheet" href="/static/css/_all-skins.min.css"/>
+    <script src="/static/js/current_user.js"></script>
+    <script src="/static/js/adminlte.min.js"></script>
+    <script src="/static/js/show_activities/show_activities.js"></script>
+{% endblock %}
+
+{% block body %}
+    <div class="navbar navbar-default navbar-fixed-top" role="navigation">
+        <div class="container">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a target="_blank" href="/show" class="navbar-brand">Friend Reader</a>
+            </div>
+            <div class="collapse navbar-collapse">
+                <ul class="nav navbar-nav">
+                    <li class="active"><a href="/show/activities">好友动态</a></li>
+                    <li class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">动态分析
+                        <span class="caret"></span>
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a href="/show/vitalities">活跃度分析</a></li>
+                            <li><a href="/show/interests">兴趣频率分析</a></li>
+                            <li><a href="/show/changes">兴趣变化分析</a></li>
+                        </ul>
+                    </li>
+                    <li><a id="button-refresh" style="cursor:pointer">刷新动态</a></li>
+                </ul>
+                <ul class="nav navbar-nav navbar-right">
+                    <li class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                            <span class="glyphicon glyphicon-user"></span> 
+                            <strong id="username">Nombre</strong>
+                            <span class="glyphicon glyphicon-chevron-down"></span>
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li>
+                                <div class="navbar-login">
+                                    <div class="row">
+                                        <div class="col-lg-4">
+                                            <p class="text-center">
+                                                <span class="glyphicon glyphicon-user icon-size"></span>
+                                            </p>
+                                        </div>
+                                        <div class="col-lg-8">
+                                            <p class="text-left"><strong id="name">Nombre Apellido</strong></p>
+                                            <p class="text-left small" id="email">correoElectronico@email.com</p>
+                                            <p class="text-left">
+                                                <a href="/config/user" class="btn btn-primary btn-block btn-sm">设置</a>
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </li>
+                            <li class="divider"></li>
+                            <li>
+                                <div class="navbar-login navbar-login-session">
+                                    <div class="row">
+                                        <div class="col-lg-12">
+                                            <p>
+                                                <a href="javascript:void(0)" class="btn btn-danger btn-block" id="button-logout">注销</a>
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="container" style="margin-top:100px" id="cnt">
+        <ul class="timeline" id="timeline">
+
+            <!-- timeline time label -->
+            <li class="time-label" style="display:none" id="time-template">
+                <span class="bg-red" id="time"></span>
+            </li>
+            <!-- /.timeline-label -->
+
+            <!-- timeline item -->
+            <li style="display:none" id="event-template">
+                <!-- timeline icon -->
+                <img src="/media/upload/233.png" width="40px" class="img-circle" style="display:inline" id="avatar">
+                <div class="timeline-item">
+                    <span class="time"><i class="fa fa-clock-o"></i><span id="event-time"> 12:05</span></span>
+
+                    <h3 class="timeline-header"><a href="#" id="name">汪泽堃</a> <span id="title">kugwzk回答了<strong>ACM的含金量真的在下降吗</strong></span></h3>
+
+                    <div class="timeline-body" id="word" style="overflow:hidden;max-height:200px;cursor:pointer">
+                        我都没拿金牌，你还说含金量低
+                    </div>
+
+                    <div class="timeline-footer">
+                        <a class="btn btn-primary btn-xs" id="url" target="_blank">原文链接</a>
+                    </div>
+                </div>
+            </li>
+            <!-- END timeline item -->
+
+
+        </ul>
+
+    </div>
+    <div class="footer navbar-fixed-bottom" style="background-color:#f39c12;display:none">
+        <div style="text-align: center;"><h3>正在加载，请稍后......</h3></div>
+    </div>
+{% endblock %}

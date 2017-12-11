@@ -19,7 +19,8 @@ from backend import views as backend_views
 from django.conf.urls.static import static
 from django.conf import settings
 import frontend.views
-from apscheduler.scheduler import Scheduler
+import  time
+
 urlpatterns = [
     url(r'^$',backend_views.testfuck),
     url(r'^users/$',backend_views.user,name = 'register'),
@@ -29,6 +30,8 @@ urlpatterns = [
     url(r'^friends/(\d+)/$',backend_views.friend,name = 'friend'),
     url(r'^friends/(\d+)/socials/(\d+)/$',backend_views.asocial,name = 'asocial'),
 
+    url(r'^attentions/$',backend_views.myfocus,name = 'myfocus'),
+    url(r'^attentions/(\d+)/$',backend_views.focu,name = 'focu'),
 
     url(r'^login/$', frontend.views.login),
     url(r'^register/$', frontend.views.register),
@@ -37,19 +40,27 @@ urlpatterns = [
     url(r'^show/interests/$', frontend.views.show_interests),
     url(r'^config/user/', frontend.views.config_user),
     url(r'^config/friends/$', frontend.views.config_friends),
+    url(r'^show/changes/$', frontend.views.show_changes),
+    url(r'^show/interactions$', frontend.views.show_interactions),
 
     url(r'^activities/$',backend_views.activities,name = 'act'),
     url(r'^activities/(\d+)/$',backend_views.activity,name = 'act21'),
+
+    url(r'^activitiesplatform/$', backend_views.activitiesplatform, name='actp'),
+    url(r'^activitiesplatform/(\d+)/$', backend_views.activityplatform, name='act21p'),
+
     url(r'^vitality/(\d+)/months/$',backend_views.vitalitymon,name = 'act23'),
     url(r'^vitality/(\d+)/days/$',backend_views.vitalityday,name = 'act4'),
     url(r'^interest/(\d+)/$',backend_views.interests,name = 'act5'),
+    url(r'^interest/(\d+)/months/$',backend_views.interestmonth,name = 'act6'),
+    url(r'^interest/(\d+)/years/$',backend_views.interestyear,name = 'act7'),
 
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)\
               + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+from apscheduler.scheduler import Scheduler
 sched = Scheduler()
-
-
 @sched.interval_schedule(seconds=600)
 def mytask():
+    print("cnm600")
     backend_views.refresh()
-sched.start
+sched.start()
