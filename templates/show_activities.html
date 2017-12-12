@@ -37,6 +37,8 @@
     <link rel="stylesheet" href="/static/css/_all-skins.min.css"/>
     <script src="/static/js/current_user.js"></script>
     <script src="/static/js/adminlte.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.12.4/css/bootstrap-select.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.12.4/js/bootstrap-select.min.js"></script>
     <script src="/static/js/show_activities/show_activities.js"></script>
 {% endblock %}
 
@@ -113,6 +115,13 @@
     </div>
 
     <div class="container" style="margin-top:100px" id="cnt">
+
+        <select class="selectpicker" id="platform">
+            <option value="-1">全部</option>
+            <option value="0">知乎</option>
+            <option value="1">微博</option>
+            <option value="2">GitHub</option>
+        </select><br/><br/>
         <ul class="timeline" id="timeline">
 
             <!-- timeline time label -->

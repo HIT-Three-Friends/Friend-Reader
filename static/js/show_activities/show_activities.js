@@ -55,7 +55,8 @@ function loadData(){
             url: location.pathname.replace("/show", ""),
             type: "GET",
             data: {
-                "page": current_page
+                "page": current_page,
+                "platform": $("#platform").val()
             },
             success: function(data) {
                 var activities = data["activity"];
@@ -78,19 +79,16 @@ function refresh() {
     $(".time-milestone").remove();
     current_page = 0;
     $(".footer").fadeIn();
-    $.ajax({
-        url: location.pathname.replace("/show", ""),
-        type: "GET",
-        data: {
-            "page": 0
-        },
-        success: function(data) {
-            loadData();
-        }
-    });
+    loadData();
 }
 
 $(function() {
+    $('#platform').on('loaded.bs.select', function (e) {
+        refresh();
+    });
+    $('#platform').on('changed.bs.select', function (e) {
+        refresh();
+    });
     loadData();
     $(window).scroll( function() {
         loadData();

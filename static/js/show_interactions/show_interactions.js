@@ -80,20 +80,24 @@ function init() {
     });
 
     $('#friendid').on('loaded.bs.select', function (e) {
+        $(".footer").fadeIn();
         $.ajax({
             url: "/interaction/"+$("#friendid").val()+"/",
             type: "GET",
             success: function(data) {
+                $(".footer").fadeOut();
                 data = data["interactions"];
                 show_table(data);
             }
         });
     });
     $('#friendid').on('changed.bs.select', function (e) {
+        $(".footer").fadeIn();
        $.ajax({
             url: "/interaction/"+$("#friendid").val()+"/",
             type: "GET",
             success: function(data) {
+                $(".footer").fadeOut();
                 data = data["interactions"];
                 show_table(data);
             }
