@@ -325,7 +325,6 @@ def refreshsocial(id,socialid):
     father = list(friends.objects.filter(id = id).values('user','name'))[0]
     user = list(users.objects.filter(username=father['user']).values("email","username"))[0]
     ac = list(social.objects.filter(father=id, platform=socialid).values('id', 'account','time'))[0]
-    initfriendfriend(id, socialid)
     plat = ['zhihu', 'weibo', 'github']
     if ac['account'] == '':
         return
@@ -344,7 +343,7 @@ def refreshsocial(id,socialid):
             if act.__contains__('imgs'):
                 for pic in act['imgs']:
                     pics.objects.create(father=newact, imgs=pic)
-            if act['topics'] == []:
+            if act['topics'] == [] and socialid == 1:
                 act['topics'] = gettopic(act['targetText'] + " "+act['summary'],ac['account'])
             addmylove(act, ac['id'])
             if socialid == 1 and 'comments' in act :
@@ -393,7 +392,7 @@ def initact(id,socialid):
         if act.__contains__('imgs'):
             for pic in act['imgs']:
                 pics.objects.create(father=newact, imgs=pic)
-        if act['topics']==[]:
+        if act['topics']==[] and socialid == 1:
             act['topics'] = gettopic(act['targetText'] + " "+act['summary'],ac['account'])
         addmylove(act,ac['id'])
         if socialid == 1 and 'comments' in act:
@@ -621,11 +620,11 @@ def interests(request,friendid):
             L = len(x['tags'])
             for y in x['tags']:
                 if mm.__contains__(y):
-                    tmpp[int(mm[y])][1] += 1/L
+                    tmpp[int(mm[y])][1] += 1.0/L
                 else:
                     mm[y] = interestnum
                     interestnum += 1
-                    tmpp.append([y,1])
+                    tmpp.append([y,1.0/L])
                 inttag += 1
         #按照出现次数排序
         tmpp.sort(key=lambda x: x[1])
@@ -759,19 +758,20 @@ def initfriendfriend(friendid,socialid):
     plat = ['zhihu', 'weibo', 'github']
     #获取关注人+被关注人
     myid = list(social.objects.filter(father=friendid,platform=socialid).values('id','account'))[0]
-    print(myid['account'])
     if (socialid != 1) :
         return
-    mylove = client.getFollowings(myid['account'],plat[socialid],300)
-    loveme = client.getFollowers(myid['account'],plat[socialid],300)
+    mylove = list(client.getFollowings(myid['account'],plat[socialid],300))
+    loveme = list(client.getFollowers(myid['account'],plat[socialid],300))
     lovelove = []#和你好友互相关注的人
     for love in mylove:
         if love in loveme:
             lovelove.append(love) # 求互相关注列表
     for love in lovelove:
         loveinfo = friendfriend.objects.filter(father = myid['id'],account=love) #检测关系数据是否存在
+        print(love)
         if loveinfo: # 老的好友
             continue
+            """
             #oldfriendfriend()
             # 爬 动态
             tloved = 0.0 # 你得好友被互动次数 = 0
@@ -795,12 +795,14 @@ def initfriendfriend(friendid,socialid):
                         else:
                             friendtopic.objects.create(father = ac['id'],topics = tt,pp = 1.0/L)
             friendfriend.objects.filter(father=myid['id'], account=love).update(loved = ac['loved'] + tloved)
+            """
         else:
             # newfriendfriend
             # 数据库新建
             # 爬 动态
             newf = friendfriend.objects.create(father=myid['id'], account=love,time=datetime.now())
             continue
+            """
             ans = client.getActivities(love, plat[socialid], 100)
             tloved = 0.0
             for act in ans :
@@ -819,6 +821,7 @@ def initfriendfriend(friendid,socialid):
                         else:
                             friendtopic.objects.create(father = newf.id,topics = tt,pp = 1.0/L)
             newf.update(loved = tloved)
+            """
     return
 
 #被主动
@@ -826,7 +829,7 @@ def addloveme(socialtid,account,cc,tag):
     ffll = friendfriend.objects.filter(father=socialtid,account=account)
     if ffll:
         fff = list(friendfriend.objects.filter(father=socialtid,account=account).values('id', 'loved', 'love', 'account'))[0]
-        cc = gettopic(cc)
+        cc = gettopic(cc,fff['account'])
         L = len(cc) + len(tag)
         for tt in tag:
             ttinfo = friendtopic.objects.filter(father=fff['id'], topics=tt)  # 检查互动主题是否存在
@@ -873,15 +876,19 @@ def interaction(request,id):
     result = {'verdict': 'success', 'message': 'Successful'}
     socialid = 1
     username = request.session.get('username', '')
+
     userinfo = users.objects.filter(username=username)
     if userinfo:
         friendinfo = friends.objects.filter(user=username, friendid=id)
         if friendinfo :
             afriend = \
             list(friends.objects.filter(user=username, friendid=id).values('friendid', 'id', 'name', 'sex', 'avatar'))[0]
+            initfriendfriend(afriend['id'],socialid)
+            print(afriend['id'])
             socialaccount = list(social.objects.filter(platform=socialid,father=afriend['id']).values('id','account'))[0]
             ffll = list(friendfriend.objects.filter(father = socialaccount['id']).values('id','loved','love','account'))
             for fff in ffll:
+                print(fff['account'])
                 fff['total'] = fff['love']+ fff['loved']
             ffll.sort(key=lambda x: x['total'])
             ffll.reverse()
@@ -891,7 +898,7 @@ def interaction(request,id):
                 tmp = {}
                 tmp['ID'] = cnt
                 tmp['Name'] = fff['account']
-                tmp['InteractioNum'] = fff['total']
+                tmp['InteractionNum'] = fff['total']
                 tops = list(friendtopic.objects.filter(father = fff['id']).values('topics','pp'))
                 tops.sort(key=lambda x: x['pp'])
                 tops.reverse()
