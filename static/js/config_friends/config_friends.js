@@ -112,6 +112,8 @@ $(function() {
                 success: function(data) {
                     var friendid = data["id"];
                     var cnt = 0;
+                    $("#cover").fadeIn();
+                    $("#loading-img").fadeIn();
                     for (var i = 0; i < 3; i++) {
                         $.ajax({
                             url: "/friends/" + friendid + "/socials/" + i + "/",

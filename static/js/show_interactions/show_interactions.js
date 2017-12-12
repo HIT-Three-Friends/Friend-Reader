@@ -31,9 +31,13 @@ function show_graph() {
       container: 'graph-container'
     });
 }
-function show_table(data) {
-    $("#table").DataTable({
-        data: data,
+var table = null;
+function show_table(data2) {
+    console.log(data2);
+    if (table != null)
+        table.destroy();
+    table = $("#table").DataTable({
+        data: data2,
         columns: [
             { data: 'Name' },
             { data: 'InteractionNum' },
