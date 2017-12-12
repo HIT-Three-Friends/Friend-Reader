@@ -65,7 +65,7 @@ function render_year(data) {
 }
 function render_month(data) {
     var xz = new Array();
-    for (var i = 1; i <= data.length; i++)
+    for (var i = 1; i <= data["day"]; i++)
         xz.push(i.toString());
     var set = new Array();
     for (var i = 0; i < data["num"]; i++) {
