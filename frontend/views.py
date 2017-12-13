@@ -38,3 +38,7 @@ def show_changes(request):
 def show_interactions(request):
     return render(request, "show_interactions.html")
 
+
+def test_callback(request):
+    return render(request, "callback.html")
+
