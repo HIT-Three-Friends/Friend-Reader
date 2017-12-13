@@ -6,7 +6,7 @@ class users(models.Model):
     password = models.CharField(max_length=20)
     email = models.CharField(max_length=40)
     friendnum = models.IntegerField(default=0)
-
+    token = models.CharField(max_length=300)
     def __int__(self):
         return self.friendnum
 
@@ -36,6 +36,7 @@ class allactivity(models.Model):
     summary = models.TextField()
     targetText = models.TextField()
     source_url = models.CharField(max_length = 300)
+    mid = models.IntegerField(default=-1)
 
 class focus(models.Model):
     father = models.CharField(max_length = 300)
@@ -57,7 +58,6 @@ class Picture(models.Model):
 class friendfriend(models.Model):
     father = models.IntegerField(default=0)
     account = models.CharField(max_length=300)
-    time = models.DateTimeField(default = timezone.now)
     loved = models.FloatField(default=0.0)
     love = models.FloatField(default=0.0)
 

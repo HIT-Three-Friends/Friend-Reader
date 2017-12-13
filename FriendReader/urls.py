@@ -53,6 +53,10 @@ urlpatterns = [
     url(r'^interest/(\d+)/years/$',backend_views.interestyear,name = 'act7'),
     url(r'^interaction/(\d+)/$',backend_views.interaction,name = 'act8'),
 
+    url(r'^token/$',backend_views.gettoken,name = 'act9'),
+    url(r'^code/$',backend_views.putcode,name = 'act18'),
+    url(r'^comment/(\d+)/$',backend_views.comment,name = 'act28'),
+
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)\
               + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 from apscheduler.scheduler import Scheduler

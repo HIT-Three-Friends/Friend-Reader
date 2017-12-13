@@ -335,10 +335,13 @@ def refreshsocial(id,socialid):
         social.objects.filter(father=id, platform=socialid).update(time=datetime.now())
         for act in ans:
             flag = []
+            mid = -1
+            if 'mid' in act:
+                mid = act['mid']
             newact = allactivity.objects.create(father=ac['id'], username=act['username'], avatar_url=act['avatar_url'],
                                                 headline=act['headline'], time=t_to_dt(act['time']),
                                                 actionType=act['actionType'], summary=act['summary'],
-                                                targetText=act['targetText'], source_url=act['source_url'])
+                                                targetText=act['targetText'], source_url=act['source_url'],mid = mid)
             newact = newact.id
             if act.__contains__('imgs'):
                 for pic in act['imgs']:
@@ -386,7 +389,10 @@ def initact(id,socialid):
     if len(ans) == 0 :
         return
     for act in ans:
-        newact = allactivity.objects.create(father = ac['id'],username = act['username'],avatar_url = act['avatar_url'],headline = act['headline'],time = t_to_dt(act['time']),actionType = act['actionType'],summary = act['summary'],targetText = act['targetText'],source_url = act['source_url'])
+        mid  = -1
+        if 'mid' in act:
+            mid = act['mid']
+        newact = allactivity.objects.create(father = ac['id'],username = act['username'],avatar_url = act['avatar_url'],headline = act['headline'],time = t_to_dt(act['time']),actionType = act['actionType'],summary = act['summary'],targetText = act['targetText'],source_url = act['source_url'],mid = mid)
         newact = newact.id
 
         if act.__contains__('imgs'):
@@ -432,6 +438,7 @@ def askactivity(username,friendid,page,socialid = -1):
                 temp['avatar'] = '/media/' + str(afriend['avatar'])
                 temp['t'] = time.mktime(act['time'])
                 temp['G'] = act['time']
+                temp['weibo_id'] = act['mid']
                 temp['date'] = str(act['time'][0]) + '年' + str(act['time'][1]) + '月' + str(act['time'][2]) + '日'
                 temp['time'] = str(act['time'][3]) + ':' + str(act['time'][4]) + ':' + str(act['time'][5])
                 temp['title'] = act['summary'] + '<i>' + plat[int(anacount['platform'])] + '.com</i>'
@@ -442,9 +449,12 @@ def askactivity(username,friendid,page,socialid = -1):
                 tag = list(topic.objects.filter(father=act['id']).values('topics'))
                 temp['tags'] = []
                 temp['pic'] = []
+                hrcnt = 0
                 for p in pic:
-                    temp['word'] +=  '<hr /><img src="'+p['imgs']+'">'
+                    if hrcnt % 3 == 0 : temp['word'] += '<hr />'
+                    temp['word'] +=  '<img src="'+p['imgs']+'"> '
                     temp['pic'].append(p['imgs'])
+                    hrcnt+=1
                 for t in tag:
                     temp['tags'].append(t['topics'])
                 temp['Video'] = []
@@ -800,7 +810,7 @@ def initfriendfriend(friendid,socialid):
             # newfriendfriend
             # 数据库新建
             # 爬 动态
-            newf = friendfriend.objects.create(father=myid['id'], account=love,time=datetime.now())
+            newf = friendfriend.objects.create(father=myid['id'], account=love)
             continue
             """
             ans = client.getActivities(love, plat[socialid], 100)
@@ -926,3 +936,42 @@ def interaction(request,id):
         result['message'] = 'Please log in first!'
     return JsonResponse(result)
 
+def gettoken(request):
+    result = {'verdict': 'ok','message': 'Successful'}
+    username = request.session.get('username', '')
+    userinfo = users.objects.filter(username=username)
+    if userinfo:
+        token = list(userinfo.values('token'))[0]['token']
+        if client.checkToken('weibo',token):
+            result['verdict'] = 'ok'
+        else:
+            result['verdict'] = 'error'
+    else:
+        result['verdict'] = 'error'
+        result['message'] = 'Please log in first!'
+
+def putcode(request):
+    result = {'verdict': 'ok', 'message': 'Successful'}
+    username = request.session.get('username', '')
+    userinfo = users.objects.filter(username=username)
+    if userinfo:
+        code = request.GET.get('code')
+        token = client.getAccessToken('weibo', code)
+        userinfo.update(token = token)
+    else:
+        result['verdict'] = 'error'
+        result['message'] = 'Please log in first!'
+
+def comment(request,weiboid):
+    result = {'verdict': 'ok', 'message': 'Successful'}
+    username = request.session.get('username', '')
+    userinfo = users.objects.filter(username=username)
+    if userinfo:
+        token = list(userinfo.values('token'))[0]['token']
+        text = request.POST.get('content',' ')
+        isok = client.putComment('weibo',text,'weiboid',token)
+        if not isok:
+            result['verdict'] = 'error'
+    else:
+        result['verdict'] = 'error'
+        result['message'] = 'Please log in first!'
