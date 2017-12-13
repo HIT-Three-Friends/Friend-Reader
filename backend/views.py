@@ -978,6 +978,7 @@ def comment(request,weiboid):
         isok = client.putComment('weibo',text,str(weiboid),token)
         if not isok:
             result['verdict'] = 'error'
+            result['message'] = '评论失败'
     else:
         result['verdict'] = 'error'
         result['message'] = 'Please log in first!'
