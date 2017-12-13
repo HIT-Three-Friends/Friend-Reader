@@ -116,7 +116,7 @@ $(function() {
     });
     $("#comment-submit").click(function() {
         $.ajax({
-            url: "/comment/" + $("#comment").find("#weibo_id").val() + "/",
+            url: "/comment/" + $("#comment-modal").find("#weibo_id").val() + "/",
             type: "POST",
             data: {
                 "content": $("#comment-modal").find("#comment").val()
