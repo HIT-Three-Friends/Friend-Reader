@@ -335,9 +335,11 @@ def refreshsocial(id,socialid):
         social.objects.filter(father=id, platform=socialid).update(time=datetime.now())
         for act in ans:
             flag = []
-            mid = -1
+            mid = '-1'
             if 'mid' in act:
                 mid = act['mid']
+            if mid == '':
+                mid = '-1'
             newact = allactivity.objects.create(father=ac['id'], username=act['username'], avatar_url=act['avatar_url'],
                                                 headline=act['headline'], time=t_to_dt(act['time']),
                                                 actionType=act['actionType'], summary=act['summary'],
@@ -389,9 +391,11 @@ def initact(id,socialid):
     if len(ans) == 0 :
         return
     for act in ans:
-        mid  = -1
+        mid  = '-1'
         if 'mid' in act:
             mid = act['mid']
+        if mid == '':
+            mid = '-1'
         newact = allactivity.objects.create(father = ac['id'],username = act['username'],avatar_url = act['avatar_url'],headline = act['headline'],time = t_to_dt(act['time']),actionType = act['actionType'],summary = act['summary'],targetText = act['targetText'],source_url = act['source_url'],mid = mid)
         newact = newact.id
 
@@ -427,7 +431,7 @@ def askactivity(username,friendid,page,socialid = -1):
             if socialid !=-1 and socialid != int(anacount['platform']):
                 continue
             #获取动态信息
-            allacts = list(allactivity.objects.filter(father = anacount['id']).values('time','summary','targetText','id','source_url'))
+            allacts = list(allactivity.objects.filter(father = anacount['id']).values('time','summary','targetText','id','source_url','mid'))
             #枚举每条动态，构造返回列表
             for act in allacts:
                 act['time'] = dt_to_t(act['time'])
@@ -778,7 +782,7 @@ def initfriendfriend(friendid,socialid):
             lovelove.append(love) # 求互相关注列表
     for love in lovelove:
         loveinfo = friendfriend.objects.filter(father = myid['id'],account=love) #检测关系数据是否存在
-        print(love)
+        #print(love)
         if loveinfo: # 老的好友
             continue
             """
@@ -894,11 +898,11 @@ def interaction(request,id):
             afriend = \
             list(friends.objects.filter(user=username, friendid=id).values('friendid', 'id', 'name', 'sex', 'avatar'))[0]
             initfriendfriend(afriend['id'],socialid)
-            print(afriend['id'])
+            #print(afriend['id'])
             socialaccount = list(social.objects.filter(platform=socialid,father=afriend['id']).values('id','account'))[0]
             ffll = list(friendfriend.objects.filter(father = socialaccount['id']).values('id','loved','love','account'))
             for fff in ffll:
-                print(fff['account'])
+                #print(fff['account'])
                 fff['total'] = fff['love']+ fff['loved']
             ffll.sort(key=lambda x: x['total'])
             ffll.reverse()
@@ -942,13 +946,14 @@ def gettoken(request):
     userinfo = users.objects.filter(username=username)
     if userinfo:
         token = list(userinfo.values('token'))[0]['token']
-        if client.checkToken('weibo',token):
+        if token != '?' and  client.checkToken('weibo',token):
             result['verdict'] = 'ok'
         else:
             result['verdict'] = 'error'
     else:
         result['verdict'] = 'error'
         result['message'] = 'Please log in first!'
+    return JsonResponse(result)
 
 def putcode(request):
     result = {'verdict': 'ok', 'message': 'Successful'}
@@ -961,6 +966,7 @@ def putcode(request):
     else:
         result['verdict'] = 'error'
         result['message'] = 'Please log in first!'
+    return render(request, "callback.html")
 
 def comment(request,weiboid):
     result = {'verdict': 'ok', 'message': 'Successful'}
@@ -969,9 +975,10 @@ def comment(request,weiboid):
     if userinfo:
         token = list(userinfo.values('token'))[0]['token']
         text = request.POST.get('content',' ')
-        isok = client.putComment('weibo',text,'weiboid',token)
+        isok = client.putComment('weibo',text,str(weiboid),token)
         if not isok:
             result['verdict'] = 'error'
     else:
         result['verdict'] = 'error'
         result['message'] = 'Please log in first!'
+    return JsonResponse(result)
