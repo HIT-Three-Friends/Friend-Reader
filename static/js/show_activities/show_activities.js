@@ -13,6 +13,7 @@ function add_activity(activity){
     new_activity.find("#url").attr("href", activity["url"]);
     new_activity.find("#word").html(activity["word"]);
     if (activity["weibo_id"] != -1) {
+        new_activity.find("#comment").css("display", "");
         new_activity.find("#comment").click(function() {
             $.ajax({
                 url: "/token/",
