@@ -145,6 +145,7 @@
 
                     <div class="timeline-footer">
                         <a class="btn btn-primary btn-xs" id="url" target="_blank">原文链接</a>
+                        <a class="btn btn-primary btn-xs" id="comment" style="display:none" href="javascript:void(0)">快速评论</a>
                     </div>
                 </div>
             </li>
@@ -156,5 +157,32 @@
     </div>
     <div class="footer navbar-fixed-bottom" style="background-color:#f39c12;display:none">
         <div style="text-align: center;"><h3>正在加载，请稍后......</h3></div>
+    </div>
+
+    <div class="modal fade" id="comment-modal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title" id="exampleModalLabel">添加评论</h4>
+          </div>
+          <div class="modal-body">
+            <form>
+              <div class="form-group" style="display:none">
+                  <label for="comment" class="control-label"></label>
+                  <input type="text" class="form-control" id="weibo_id" name="weibo_id">
+              </div>
+              <div class="form-group">
+                  <label for="comment" class="control-label"></label>
+                  <textarea class="form-control" id="comment" name="comment" rows="5"></textarea>
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+            <button type="button" class="btn btn-primary" id="comment-submit">提交</button>
+          </div>
+        </div>
+      </div>
     </div>
 {% endblock %}

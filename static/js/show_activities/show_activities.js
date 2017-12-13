@@ -12,6 +12,23 @@ function add_activity(activity){
     new_activity.find("#name").attr("href", "/show/activities/"+activity["friendid"]+"/");
     new_activity.find("#url").attr("href", activity["url"]);
     new_activity.find("#word").html(activity["word"]);
+    if (activity["weibo_id"] != -1) {
+        new_activity.find("#comment").click(function() {
+            $.ajax({
+                url: "/token/",
+                type: "GET",
+                success: function(data) {
+                    if (data["verdict"] == "error") {
+                        window.open('https://api.weibo.com/oauth2/authorize?client_id=610259729&response_type=code&redirect_uri=http://reader.qwertier.cn/code/','_blank','width=300,height=200,menubar=no,toolbar=no, status=no,scrollbars=yes');
+                    } else {
+                        $("#comment-modal").find("#comment").val("");
+                        $("#comment-modal").find("#weibo_id").val(activity["weibo_id"]);
+                        $('#comment-modal').modal('show');
+                    }
+                }
+            })
+        })
+    }
     new_activity.find("#word").click(function(e) {
         new_activity.find("#word").css("max-height", "");
         new_activity.find("#word").css("cursor", "");
@@ -95,5 +112,25 @@ $(function() {
     });
     $("#button-refresh").click(function() {
         refresh();
+    });
+    $("#comment-submit").click(function() {
+        $.ajax({
+            url: "/comment/" + $("#comment").find("#weibo_id").val() + "/",
+            type: "POST",
+            data: {
+                "content": $("#comment-modal").find("#comment").val()
+            },
+            success: function(data) {
+                if (data["verdict"] == "ok") {
+                    alert("评论成功!");
+                    $("#comment-modal").modal("hide");
+                } else {
+                    alert(data["message"]);
+                }
+            },
+            error: function() {
+                alert("评论失败，请联系管理员");
+            }
+        });
     });
 });

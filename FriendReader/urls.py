@@ -42,6 +42,7 @@ urlpatterns = [
     url(r'^config/friends/$', frontend.views.config_friends),
     url(r'^show/changes/$', frontend.views.show_changes),
     url(r'^show/interactions$', frontend.views.show_interactions),
+    url(r'^test/callback$', frontend.views.test_callback),
 
     url(r'^activities/$', backend_views.activitiesplatform, name='actp'),
     url(r'^activities/(\d+)/$', backend_views.activityplatform, name='act21p'),
