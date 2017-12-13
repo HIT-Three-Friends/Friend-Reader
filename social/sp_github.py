@@ -355,7 +355,10 @@ class People(object):
 				repocommits=self.repoCommits(repo['name'],repo['owner'],repo['precommits'])
 				try:nextcommit=next(repocommits)
 				except StopIteration as e:nextcommit={'date':'0'}
-				except Exception as e:logging.error("get next commit fail "+repo['name'])
+				except Exception as e:
+					logging.error("get next commit fail "+repo['name'])
+					count-=1
+					continue
 				lis.append({'commits':repocommits,'nextcommit':nextcommit,'date':nextcommit['date'],'visited':False})
 				count-=1
 						
