@@ -20,7 +20,7 @@ function add_activity(activity){
                 type: "GET",
                 success: function(data) {
                     if (data["verdict"] == "error") {
-                        window.open('https://api.weibo.com/oauth2/authorize?client_id=610259729&response_type=code&redirect_uri=http://reader.qwertier.cn/code/','_blank','width=300,height=200,menubar=no,toolbar=no, status=no,scrollbars=yes');
+                        window.open('https://api.weibo.com/oauth2/authorize?client_id=610259729&response_type=code&redirect_uri=http://127.0.0.1/code/','_blank','width=300,height=200,menubar=no,toolbar=no, status=no,scrollbars=yes');
                     } else {
                         $("#comment-modal").find("#comment").val("");
                         $("#comment-modal").find("#weibo_id").val(activity["weibo_id"]);
