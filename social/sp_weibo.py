@@ -6,7 +6,6 @@ import time,datetime,traceback
 import pickle,logging,re,configparser
 import requests
 from .sp_base import basespider
-from .items import TweetsItem, InformationItem
 from .weibo_parserpc import *
 from .cookies import getCookie
 
